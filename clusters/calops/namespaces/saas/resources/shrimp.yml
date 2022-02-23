@@ -1,0 +1,15 @@
+apiVersion: certmanager.k8s.io/v1alpha1
+kind: Certificate
+metadata:
+  name: shrimp
+spec:
+  secretName: shrimp-syslog-tls
+  issuerRef:
+    name: dns-issuer
+  commonName: shrimp.a.darkcubed.net
+  acme:
+    config:
+    - dns01:
+        provider: route53-darkcubed-net
+      domains:
+      - shrimp.a.darkcubed.net

@@ -1,0 +1,35 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: beanstalk
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: beanstalk
+    spec:
+      containers:
+      - image: activeshadow/beanstalkd
+        imagePullPolicy: IfNotPresent
+        name: beanstalk
+        ports:
+        - containerPort: 11300
+          protocol: TCP
+        resources:
+          requests:
+            cpu: 20m
+            memory: 32Mi
+        terminationMessagePolicy: FallbackToLogsOnError
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: beanstalk
+spec:
+  ports:
+  - name: beanstalk
+    port: 11300
+    protocol: TCP
+  selector:
+    app: beanstalk

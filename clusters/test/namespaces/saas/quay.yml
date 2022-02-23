@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: quay.io
+type: kubernetes.io/dockerconfigjson
+data:
+  .dockerconfigjson: ewogICJhdXRocyI6IHsKICAgICJxdWF5LmlvIjogewogICAgICAiYXV0aCI6ICJaR0Z5YTJOMVltVmtLM0IxYkd4bGNqcENWa28zTVVwTFNqaExSemRTV1RNNVNUbFpSMFpPVFRnNE5FMDRSVTVLTUVzMlN6STNUMG8xVTFGWlYxTlROVlJITjFWRVdWTTRSVVZaVFVSWFVqWkIiLAogICAgICAiZW1haWwiOiAiIgogICAgfQogIH0KfQ==

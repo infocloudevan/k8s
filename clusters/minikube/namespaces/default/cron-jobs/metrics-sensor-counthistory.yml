@@ -1,0 +1,48 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: metrics-sensor-counthistory
+spec:
+  schedule: 0 0 * * *
+  concurrencyPolicy: Forbid
+  suspend: false
+  jobTemplate:
+    metadata:
+      creationTimestamp: null
+    spec:
+      template:
+        metadata:
+          creationTimestamp: null
+        spec:
+          containers:
+            - name: metrics-sensor-counthistory
+              image: hyperdark
+              imagePullPolicy: Never
+              args:
+                - /hyperdark
+                - '--log.verbosity=10'
+                - utils
+                - metrics
+                - sensor-count-history
+                - '--max-no-of-resources-processed-in-parallel=100'
+              env:
+              - name: HYPERDARK_CACHE_ENDPOINT
+                valueFrom:
+                  configMapKeyRef:
+                    name: endpoints
+                    key: redis-server
+              - name: HYPERDARK_DB_ENDPOINT
+                valueFrom:
+                  configMapKeyRef:
+                    name: endpoints
+                    key: postgres-cluster
+              resources: {}
+              terminationMessagePath: /dev/termination-log
+              terminationMessagePolicy: FallbackToLogsOnError
+          restartPolicy: Never
+          terminationGracePeriodSeconds: 3000
+          dnsPolicy: ClusterFirst
+          securityContext: {}
+          schedulerName: default-scheduler
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 1

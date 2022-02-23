@@ -1,0 +1,66 @@
+prometheusOperator:
+  createCustomResource: false
+
+prometheus:
+  server:
+    persistentVolume:
+      enabled: true
+  service:
+    #annotations:
+      #service.beta.kubernetes.io/aws-load-balancer-internal: 0.0.0.0/0
+    labels:
+      operated-prometheus: "true"
+    type: ClusterIP 
+    port: 9090
+    targetPort: 9090
+  prometheusSpec:
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+         # storageClassName: 
+          accessModes: ["ReadWriteMany"]
+          resources:
+            requests:
+              storage: 5Gi
+  additionalPodMonitors:
+    - name: prometheus-prometheus-oper-d3oc
+      namespaceSelector:
+        matchNames:
+          - default
+      podMetricsEndpoints:
+        - port: metrics
+      selector:
+        matchLabels:
+          prom: monitor
+    - name: prometheus-prometheus-oper-hyperdark
+      namespaceSelector:
+        matchNames:
+          - default
+      podMetricsEndpoints:
+        - port: metrics
+      selector:
+        matchLabels:
+          prom: monitor
+  additionalServiceMonitors:
+    - name: prometheus-prometheus-oper-kafka-minion
+      namespaceSelector:
+        matchNames:
+          - monitoring
+      endpoints:
+        - port: http
+      selector:
+        matchLabels:
+          app.kubernetes.io/name: kafka-minion
+    - name: prometheus-prometheus-oper-postgres-exporter
+      namespaceSelector:
+        matchNames:
+          - monitoring
+      endpoints:
+        - port: metrics
+      selector:
+        matchLabels:
+          app: prometheus-postgres-exporter
+
+kubelet:
+  serviceMonitor:
+    https: false

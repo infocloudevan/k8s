@@ -1,0 +1,467 @@
+apiVersion: kafka.strimzi.io/v1beta1
+kind: KafkaTopic
+metadata:
+  name: syslog-sensor-table
+  labels:
+    strimzi.io/cluster: kafka
+spec:
+  topicName: SyslogSensor-table
+  partitions: 1
+  replicas: 2
+  config:
+    cleanup.policy: compact
+---
+apiVersion: kafka.strimzi.io/v1beta1
+kind: KafkaTopic
+metadata:
+  name: sensor-table
+  labels:
+    strimzi.io/cluster: kafka
+spec:
+  topicName: Sensor-table
+  partitions: 1
+  replicas: 2
+  config:
+    cleanup.policy: compact
+---
+apiVersion: kafka.strimzi.io/v1beta1
+kind: KafkaTopic
+metadata:
+  name: incoming-syslog
+  labels:
+    strimzi.io/cluster: kafka
+spec:
+  topicName: IncomingSyslogStream
+  partitions: 1
+  replicas: 2
+  config:
+    cleanup.policy: delete
+---
+apiVersion: kafka.strimzi.io/v1beta1
+kind: KafkaTopic
+metadata:
+  name: failed-syslog
+  labels:
+    strimzi.io/cluster: kafka
+spec:
+  topicName: FailedSyslogStream
+  partitions: 1
+  replicas: 2
+  config:
+    cleanup.policy: delete
+---
+apiVersion: kafka.strimzi.io/v1beta1
+kind: KafkaTopic
+metadata:
+  name: failed-syslog-table
+  labels:
+    strimzi.io/cluster: kafka
+spec:
+  topicName: FailedSyslog-table
+  partitions: 1
+  replicas: 2
+  config:
+    cleanup.policy: compact
+---
+apiVersion: kafka.strimzi.io/v1beta1
+kind: KafkaTopic
+metadata:
+  name: event
+  labels:
+    strimzi.io/cluster: kafka
+spec:
+  topicName: EventStream
+  partitions: 1
+  replicas: 2
+  config:
+    cleanup.policy: delete
+---
+apiVersion: kafka.strimzi.io/v1beta1
+kind: KafkaTopic
+metadata:
+  name: global-whitelist-table
+  labels:
+    strimzi.io/cluster: kafka
+spec:
+  topicName: GlobalWhitelist-table
+  partitions: 1
+  replicas: 2
+  config:
+    cleanup.policy: compact
+---
+apiVersion: kafka.strimzi.io/v1beta1
+kind: KafkaTopic
+metadata:
+  name: account-whitelist-table
+  labels:
+    strimzi.io/cluster: kafka
+spec:
+  topicName: AccountWhitelist-table
+  partitions: 1
+  replicas: 2
+  config:
+    cleanup.policy: compact
+---
+apiVersion: kafka.strimzi.io/v1beta1
+kind: KafkaTopic
+metadata:
+  name: blacklist
+  labels:
+    strimzi.io/cluster: kafka
+spec:
+  topicName: BlacklistStream
+  partitions: 1
+  replicas: 2
+  config:
+    cleanup.policy: delete
+---
+apiVersion: kafka.strimzi.io/v1beta1
+kind: KafkaTopic
+metadata:
+  name: threat-database-table
+  labels:
+    strimzi.io/cluster: kafka
+spec:
+  topicName: ThreatDatabase-table
+  partitions: 1
+  replicas: 2
+  config:
+    cleanup.policy: compact
+---
+apiVersion: kafka.strimzi.io/v1beta1
+kind: KafkaTopic
+metadata:
+  name: threat-database
+  labels:
+    strimzi.io/cluster: kafka
+spec:
+  topicName: ThreatDatabaseStream
+  partitions: 1
+  replicas: 2
+  config:
+    cleanup.policy: delete
+---
+apiVersion: kafka.strimzi.io/v1beta1
+kind: KafkaTopic
+metadata:
+  name: threat-doc
+  labels:
+    strimzi.io/cluster: kafka
+spec:
+  topicName: ThreatDocStream
+  partitions: 1
+  replicas: 2
+  config:
+    cleanup.policy: delete
+---
+apiVersion: kafka.strimzi.io/v1beta1
+kind: KafkaTopic
+metadata:
+  name: threat-cache
+  labels:
+    strimzi.io/cluster: kafka
+spec:
+  topicName: ThreatCacheStream
+  partitions: 1
+  replicas: 2
+  config:
+    cleanup.policy: delete
+---
+apiVersion: kafka.strimzi.io/v1beta1
+kind: KafkaTopic
+metadata:
+  name: traffic-filter-table
+  labels:
+    strimzi.io/cluster: kafka
+spec:
+  topicName: TrafficFilter-table
+  partitions: 1
+  replicas: 2
+  config:
+    cleanup.policy: compact
+---
+apiVersion: kafka.strimzi.io/v1beta1
+kind: KafkaTopic
+metadata:
+  name: traffic-filter
+  labels:
+    strimzi.io/cluster: kafka
+spec:
+  topicName: TrafficFilterStream
+  partitions: 1
+  replicas: 2
+  config:
+    cleanup.policy: delete
+---
+apiVersion: kafka.strimzi.io/v1beta1
+kind: KafkaTopic
+metadata:
+  name: port-service-table
+  labels:
+    strimzi.io/cluster: kafka
+spec:
+  topicName: PortService-table
+  partitions: 1
+  replicas: 2
+  config:
+    cleanup.policy: compact
+---
+apiVersion: kafka.strimzi.io/v1beta1
+kind: KafkaTopic
+metadata:
+  name: internal-network-table
+  labels:
+    strimzi.io/cluster: kafka
+spec:
+  topicName: InternalNetwork-table
+  partitions: 1
+  replicas: 2
+  config:
+    cleanup.policy: compact
+---
+apiVersion: kafka.strimzi.io/v1beta1
+kind: KafkaTopic
+metadata:
+  name: traffic
+  labels:
+    strimzi.io/cluster: kafka
+spec:
+  topicName: TrafficStream
+  partitions: 1
+  replicas: 2
+  config:
+    cleanup.policy: delete
+---
+apiVersion: kafka.strimzi.io/v1beta1
+kind: KafkaTopic
+metadata:
+  name: traffic-database
+  labels:
+    strimzi.io/cluster: kafka
+spec:
+  topicName: TrafficDatabaseStream
+  partitions: 1
+  replicas: 2
+  config:
+    cleanup.policy: delete
+---
+apiVersion: kafka.strimzi.io/v1beta1
+kind: KafkaTopic
+metadata:
+  name: traffic-doc
+  labels:
+    strimzi.io/cluster: kafka
+spec:
+  topicName: TrafficDocStream
+  partitions: 1
+  replicas: 2
+  config:
+    cleanup.policy: delete
+---
+apiVersion: kafka.strimzi.io/v1beta1
+kind: KafkaTopic
+metadata:
+  name: traffic-cache
+  labels:
+    strimzi.io/cluster: kafka
+spec:
+  topicName: TrafficCacheStream
+  partitions: 1
+  replicas: 2
+  config:
+    cleanup.policy: delete
+---
+apiVersion: kafka.strimzi.io/v1beta1
+kind: KafkaTopic
+metadata:
+  name: resolution-table
+  labels:
+    strimzi.io/cluster: kafka
+spec:
+  topicName: Resolution-table
+  partitions: 1
+  replicas: 2
+  config:
+    cleanup.policy: compact
+---
+apiVersion: kafka.strimzi.io/v1beta1
+kind: KafkaTopic
+metadata:
+  name: report-table
+  labels:
+    strimzi.io/cluster: kafka
+spec:
+  topicName: Report-table
+  partitions: 1
+  replicas: 2
+  config:
+    cleanup.policy: compact
+---
+apiVersion: kafka.strimzi.io/v1beta1
+kind: KafkaTopic
+metadata:
+  name: report-loop
+  labels:
+    strimzi.io/cluster: kafka
+spec:
+  topicName: Report-loop
+  partitions: 1
+  replicas: 2
+  config:
+    cleanup.policy: delete
+---
+apiVersion: kafka.strimzi.io/v1beta1
+kind: KafkaTopic
+metadata:
+  name: report
+  labels:
+    strimzi.io/cluster: kafka
+spec:
+  topicName: ReportStream
+  partitions: 1
+  replicas: 2
+  config:
+    cleanup.policy: delete
+---
+apiVersion: kafka.strimzi.io/v1beta1
+kind: KafkaTopic
+metadata:
+  name: force
+  labels:
+    strimzi.io/cluster: kafka
+spec:
+  topicName: ForceStream
+  partitions: 1
+  replicas: 2
+  config:
+    cleanup.policy: delete
+---
+apiVersion: kafka.strimzi.io/v1beta1
+kind: KafkaTopic
+metadata:
+  name: score-loop
+  labels:
+    strimzi.io/cluster: kafka
+spec:
+  topicName: Score-loop
+  partitions: 1
+  replicas: 2
+  config:
+    cleanup.policy: delete
+---
+apiVersion: kafka.strimzi.io/v1beta1
+kind: KafkaTopic
+metadata:
+  name: score
+  labels:
+    strimzi.io/cluster: kafka
+spec:
+  topicName: ScoreStream
+  partitions: 1
+  replicas: 2
+  config:
+    cleanup.policy: delete
+---
+apiVersion: kafka.strimzi.io/v1beta1
+kind: KafkaTopic
+metadata:
+  name: mute
+  labels:
+    strimzi.io/cluster: kafka
+spec:
+  topicName: MuteStream
+  partitions: 1
+  replicas: 2
+  config:
+    cleanup.policy: delete
+---
+apiVersion: kafka.strimzi.io/v1beta1
+kind: KafkaTopic
+metadata:
+  name: block
+  labels:
+    strimzi.io/cluster: kafka
+spec:
+  topicName: BlockStream
+  partitions: 1
+  replicas: 2
+  config:
+    cleanup.policy: delete
+---
+apiVersion: kafka.strimzi.io/v1beta1
+kind: KafkaTopic
+metadata:
+  name: notification-table
+  labels:
+    strimzi.io/cluster: kafka
+spec:
+  topicName: Notification-table
+  partitions: 1
+  replicas: 2
+  config:
+    cleanup.policy: compact
+---
+apiVersion: kafka.strimzi.io/v1beta1
+kind: KafkaTopic
+metadata:
+  name: high-score-notify
+  labels:
+    strimzi.io/cluster: kafka
+spec:
+  topicName: HighScoreNotifyStream
+  partitions: 1
+  replicas: 2
+  config:
+    cleanup.policy: delete
+---
+apiVersion: kafka.strimzi.io/v1beta1
+kind: KafkaTopic
+metadata:
+  name: auto-block-notify
+  labels:
+    strimzi.io/cluster: kafka
+spec:
+  topicName: AutoBlockNotifyStream
+  partitions: 1
+  replicas: 2
+  config:
+    cleanup.policy: delete
+---
+apiVersion: kafka.strimzi.io/v1beta1
+kind: KafkaTopic
+metadata:
+  name: user-invite
+  labels:
+    strimzi.io/cluster: kafka
+spec:
+  topicName: UserInviteStream
+  partitions: 1
+  replicas: 2
+  config:
+    cleanup.policy: delete
+---
+apiVersion: kafka.strimzi.io/v1beta1
+kind: KafkaTopic
+metadata:
+  name: user-confirmation
+  labels:
+    strimzi.io/cluster: kafka
+spec:
+  topicName: UserConfirmationStream
+  partitions: 1
+  replicas: 2
+  config:
+    cleanup.policy: delete
+---
+apiVersion: kafka.strimzi.io/v1beta1
+kind: KafkaTopic
+metadata:
+  name: user-password-reset
+  labels:
+    strimzi.io/cluster: kafka
+spec:
+  topicName: UserPasswordResetStream
+  partitions: 1
+  replicas: 2
+  config:
+    cleanup.policy: delete

@@ -1,0 +1,98 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  labels:
+    app: stats
+  name: stats
+  namespace: temp-saas
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: stats
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: stats
+    spec:
+      containers:
+      - args:
+        - groundskeeper
+        - --sleep=10s
+        - --deployment-type=cloud
+        - --pubsub-provider=beanstalk
+        - --pubsub-endpoint=queue:11300
+        - --tube=query
+        - --tube=write
+        - --tube=accumulated
+        - --postgres=$(DB_URL)
+        env:
+        - name: DB_URL
+          valueFrom: 
+            secretKeyRef:
+              name: saas-db-credentials
+              key: fullurl
+        image: 078306444420.dkr.ecr.us-east-2.amazonaws.com/darkcubed/hyperdark:v25.4.5
+        imagePullPolicy: IfNotPresent
+        name: groundskeeper
+        resources:
+          requests:
+            cpu: 10m
+            memory: 32Mi
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+      - args:
+        - statsite
+        - -f
+        - /etc/statsite.influxdb.conf
+        env:
+        - name: INFLUX_ENDPOINT
+          value: http://temp-saas-metrics-influxdb:8086
+        - name: INFLUX_TIMEOUT
+          value: 10s
+        - name: INFLUX_DB
+          value: appliance
+        - name: K8S_CUSTOMER
+          value: saas
+        - name: K8S_NAMESPACE
+          value: temp-saas
+        image: 078306444420.dkr.ecr.us-east-2.amazonaws.com/darkcubed/statsite:v25.4
+        imagePullPolicy: IfNotPresent
+        name: statsite
+        ports:
+        - containerPort: 8125
+          protocol: TCP
+        resources:
+          requests:
+            cpu: 10m
+            memory: 32Mi
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: stats
+  namespace: temp-saas
+spec:
+  ports:
+  - name: statsite
+    port: 8125
+    protocol: UDP
+    targetPort: 8125
+  selector:
+    app: stats
+  sessionAffinity: None
+  type: ClusterIP

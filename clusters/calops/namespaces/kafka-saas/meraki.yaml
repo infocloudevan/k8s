@@ -1,0 +1,91 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  annotations:
+    deployment.kubernetes.io/revision: "18"
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"extensions/v1beta1","kind":"Deployment","metadata":{"annotations":{},"name":"meraki","namespace":"kafka-saas"},"spec":{"replicas":1,"template":{"metadata":{"annotations":null,"labels":{"app":"meraki"}},"spec":{"containers":[{"args":["/hyperdark","--log.verbosity=10","meraki"],"env":[{"name":"HYPERDARK_DB_ENDPOINT","valueFrom":{"secretKeyRef":{"key":"postgres-cluster","name":"endpoints"}}}],"image":"078306444420.dkr.ecr.us-east-2.amazonaws.com/darkcubed/hyperdark:DC-406","imagePullPolicy":"Always","name":"meraki","terminationMessagePath":"/dev/termination-log","terminationMessagePolicy":"FallbackToLogsOnError"}]}}}}
+  creationTimestamp: 2019-08-18T22:56:24Z
+  generation: 26
+  labels:
+    app: meraki
+  name: meraki
+  namespace: kafka-saas
+  resourceVersion: "169204346"
+  selfLink: /apis/extensions/v1beta1/namespaces/kafka-saas/deployments/meraki
+  uid: 675a6434-c20b-11e9-bc71-0a9e36e5582e
+spec:
+  progressDeadlineSeconds: 2147483647
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: meraki
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+    type: RollingUpdate
+  template:
+    metadata:
+      annotations:
+        date: "1590004007"
+      creationTimestamp: null
+      labels:
+        app: meraki
+    spec:
+      containers:
+      - args:
+        - /hyperdark
+        - --log.verbosity=10
+        - meraki
+        env:
+        - name: HYPERDARK_CACHE_ENDPOINT
+          valueFrom:
+            configMapKeyRef:
+              key: redis-server
+              name: endpoints
+        - name: HYPERDARK_CACHE_CLUSTER_ENDPOINTS
+          valueFrom:
+            configMapKeyRef:
+              key: redis-cluster
+              name: endpoints
+        - name: HYPERDARK_DB_ENDPOINT
+          valueFrom:
+            secretKeyRef:
+              key: postgres-cluster
+              name: endpoints
+        - name: HYPERDARK_ES_ENDPOINTS
+          valueFrom:
+            configMapKeyRef:
+              key: es-cluster
+              name: endpoints
+        - name: HYPERDARK_ES_CREDENTIALS
+          valueFrom:
+            secretKeyRef:
+              key: creds
+              name: elastic-user
+        image: 078306444420.dkr.ecr.us-east-2.amazonaws.com/darkcubed/hyperdark:f2d65ca
+        imagePullPolicy: Always
+        name: meraki
+        resources: {}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: FallbackToLogsOnError
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
+status:
+  availableReplicas: 1
+  conditions:
+  - lastTransitionTime: 2019-08-18T22:56:24Z
+    lastUpdateTime: 2019-08-18T22:56:24Z
+    message: Deployment has minimum availability.
+    reason: MinimumReplicasAvailable
+    status: "True"
+    type: Available
+  observedGeneration: 26
+  readyReplicas: 1
+  replicas: 1
+  updatedReplicas: 1

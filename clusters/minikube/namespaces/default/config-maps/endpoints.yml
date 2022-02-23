@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: endpoints
+data:
+  blackbox-server: MOCK
+  es-cluster: http://elasticsearch-master.default.svc:9200
+  kafka-cluster: d3-kafka.default.svc:9092
+  postgres-cluster: postgres://dark3:dark3@saasdb.default.svc:5432/dark3
+  redis-server: redis-master.default.svc:6379

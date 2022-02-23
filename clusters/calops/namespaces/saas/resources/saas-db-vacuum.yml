@@ -1,0 +1,23 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: saas-db-vacuum
+spec:
+  concurrencyPolicy: Forbid
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - args:
+            - /bin/sh
+            - -c
+            - echo "saas-testing.cmfxlqcsk74c.us-east-2.rds.amazonaws.com:5432:dark3:dark3:Qv8CYJfKDYR7PNed" > .pgpass && chmod 600 .pgpass && vacuumdb -h saas-testing.cmfxlqcsk74c.us-east-2.rds.amazonaws.com -U dark3 -W --analyze -j 10 dark3
+            image: activeshadow/aws-cli
+            imagePullPolicy: IfNotPresent
+            name: saas-db-vacuum
+            terminationMessagePolicy: FallbackToLogsOnError
+          restartPolicy: OnFailure
+  schedule: 0 9 * * *
+  successfulJobsHistoryLimit: 1

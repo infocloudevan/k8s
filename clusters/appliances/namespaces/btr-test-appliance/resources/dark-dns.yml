@@ -1,0 +1,25 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: dark-dns
+spec:
+  replicas: 0
+  template:
+    metadata:
+      labels:
+        app: dark-dns
+    spec:
+      containers:
+      - args:
+        - cloudflared
+        - proxy-dns
+        - --address=192.168.123.1
+        image: quay.io/darkcubed/dark-dns:v0.0.0
+        imagePullPolicy: Always
+        name: dns
+        terminationMessagePolicy: FallbackToLogsOnError
+      hostNetwork: true
+      imagePullSecrets:
+      - name: quay.io
+      nodeSelector:
+        appliance: btr-test-appliance

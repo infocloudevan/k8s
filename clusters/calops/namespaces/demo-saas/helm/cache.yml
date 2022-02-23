@@ -1,0 +1,8 @@
+# uses stable/redis
+cluster:
+  enabled: false
+metrics:
+  enabled: true
+persistence:
+  size: 10Gi
+usePassword: false

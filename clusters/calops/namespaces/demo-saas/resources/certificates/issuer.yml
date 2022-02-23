@@ -1,0 +1,22 @@
+apiVersion: certmanager.k8s.io/v1alpha1
+kind: Issuer
+metadata:
+  annotations:
+  name: dns-issuer
+spec:
+  acme:
+    dns01:
+      providers:
+      - name: route53-darkcubed-net
+        route53:
+          accessKeyID: AKIAJHZGMGFZCEWN6CUA
+          hostedZoneID: Z347L2B0T7JDI
+          region: us-east-2
+          secretAccessKeySecretRef:
+            key: secret-access-key
+            name: route53-access-key
+    email: btr@darkcubed.com
+    privateKeySecretRef:
+      key: ""
+      name: letsencrypt-private-key
+    server: https://acme-v02.api.letsencrypt.org/directory

@@ -1,0 +1,32 @@
+Deployment,Image,Build,Notes
+agent-block,hyperdark,0d5a6c7,Update image
+agent-block-cache,hyperdark,0d5a6c7,Update image
+agent-block-db,hyperdark,0d5a6c7,Add cache env vars; update image
+agent-block-doc,hyperdark,0d5a6c7,Add cache env vars; update image
+agent-mute,hyperdark,0d5a6c7,Update image
+agent-mute-cache,hyperdark,0d5a6c7,Update image
+agent-mute-db,hyperdark,0d5a6c7,Add cache env vars; update image
+agent-mute-doc,hyperdark,0d5a6c7,Add cache env vars; update image
+catcher-listener,hyperdark,0d5a6c7,
+catcher-listener-lm,hyperdark,0d5a6c7,
+catcher-processor,hyperdark,0d5a6c7,
+cleanup-report,hyperdark,9eedfd1,
+cleanup-score,hyperdark,5ef4924,
+coach-whitelister,hyperdark,0d5a6c7,
+kafka-minion,kafka-minion,v1.0.0,
+leadoff-threat,hyperdark,6e73f41,
+leadoff-threat-cache,hyperdark,6e73f41,
+leadoff-threat-db,hyperdark,6e73f41,
+leadoff-threat-doc,hyperdark,6e73f41,
+leadoff-traffic,hyperdark,6e73f41,
+leadoff-traffic-cache,hyperdark,b22c81b,
+leadoff-traffic-db,hyperdark,6e73f41,
+leadoff-traffic-doc,hyperdark,6e73f41,
+leadoff-traffic-filter,hyperdark,6e73f41,
+newsroom-notify-auto-block,hyperdark,0d5a6c7,Remove SMTP arguments; Add cache env vars; update image
+newsroom-notify-high-score,hyperdark,0d5a6c7,Remove SMTP arguments; update image
+newsroom-notify-user,hyperdark,0d5a6c7,Update image
+notifications-email,hyperdark,0d5a6c7,Adding in as new
+notifications-slack,hyperdark,0d5a6c7,Adding in as new
+notifications-syslog,hyperdark,0d5a6c7,Adding in as new
+scoreboard,hyperdark,0d5a6c7,

@@ -1,0 +1,33 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: openvas
+spec:
+  replicas: 0
+  template:
+    metadata:
+      labels:
+        app: openvas
+    spec:
+      containers:
+      - args:
+        - /start
+        image: quay.io/darkcubed/openvas-full:1.0
+        imagePullPolicy: IfNotPresent
+        name: openvas
+        ports:
+        - containerPort: 9390
+        terminationMessagePolicy: FallbackToLogsOnError
+        volumeMounts:
+        - mountPath: /openvas/results
+          name: results
+      hostNetwork: true
+      imagePullSecrets:
+      - name: quay.io
+      nodeSelector:
+        appliance: btr-test-appliance
+      volumes:
+      - hostPath:
+          path: /opt/darkcubed/openvas
+          type: DirectoryOrCreate
+        name: results

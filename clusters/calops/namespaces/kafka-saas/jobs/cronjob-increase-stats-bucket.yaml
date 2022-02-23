@@ -1,0 +1,47 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: increase-stats-bucket
+spec:
+  schedule: 0/5 * * * *
+  concurrencyPolicy: Forbid
+  suspend: true
+  jobTemplate:
+    metadata:
+      creationTimestamp: null
+    spec:
+      template:
+        metadata:
+          creationTimestamp: null
+        spec:
+          containers:
+            - name: increase-stats-bucket
+              image: 078306444420.dkr.ecr.us-east-2.amazonaws.com/darkcubed/hyperdark:d9d52a6
+              imagePullPolicy: Always
+              args:
+                - /hyperdark
+                - '--log.verbosity=5'
+                - utils
+                - increase-stats-bucket
+                - --dry-run=true
+              env:
+              - name: HYPERDARK_CACHE_ENDPOINT
+                valueFrom: 
+                  configMapKeyRef:
+                    name: endpoints
+                    key: redis-server
+              - name: HYPERDARK_DB_ENDPOINT
+                valueFrom: 
+                  configMapKeyRef:
+                    name: endpoints
+                    key: postgres-cluster
+              resources: {}
+              terminationMessagePath: /dev/termination-log
+              terminationMessagePolicy: FallbackToLogsOnError
+          restartPolicy: Never
+          terminationGracePeriodSeconds: 3000
+          dnsPolicy: ClusterFirst
+          securityContext: {}
+          schedulerName: default-scheduler
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 1

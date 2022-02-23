@@ -1,0 +1,33 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: periodic
+  namespace: demo-saas
+spec:
+  concurrencyPolicy: Forbid
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - args:
+            - periodic
+            - --postgres-endpoint=$(DB_URL)
+            - --redis-endpoint=demo-saas-cache-redis-master:6379
+            - --view=sensor_details
+            env:
+            - name: DB_URL
+              valueFrom: 
+                secretKeyRef:
+                  name: saas-db-credentials
+                  key: fullurl
+            image: 078306444420.dkr.ecr.us-east-2.amazonaws.com/darkcubed/hyperdark:v25.4.5
+            imagePullPolicy: IfNotPresent
+            name: periodic
+            terminationMessagePath: /dev/termination-log
+            terminationMessagePolicy: FallbackToLogsOnError
+          restartPolicy: OnFailure
+  schedule: 0/5 * * * *
+  successfulJobsHistoryLimit: 0
+  suspend: false

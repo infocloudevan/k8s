@@ -1,0 +1,24 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: rm-beanstalk-{{APPLIANCE}}
+  namespace: {{NAMESPACE}}
+spec:
+  template:
+    metadata:
+      name: rm-beanstalk-{{APPLIANCE}}
+    spec:
+      nodeSelector:
+        appliance: {{APPLIANCE}}
+      containers:
+        - name: rm-beanstalk-{{APPLIANCE}}
+          image: busybox
+          command: ["rm", "-fr", "/tmp/opt/darkcubed/beanstalk"]
+          volumeMounts:
+            - name: beanstalk-tmp
+              mountPath: /tmp/opt/darkcubed
+      restartPolicy: Never
+      volumes:
+        - name: beanstalk-tmp
+          hostPath:
+            path: /opt/darkcubed

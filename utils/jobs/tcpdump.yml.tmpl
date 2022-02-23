@@ -1,0 +1,18 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: tcpdump-{{APPLIANCE}}
+  namespace: {{NAMESPACE}}
+spec:
+  template:
+    metadata:
+      name: tcpdump-{{APPLIANCE}}
+    spec:
+      nodeSelector:
+        appliance: {{APPLIANCE}}
+      hostNetwork: true
+      containers:
+        - name: tcpdump
+          image: activeshadow/tcpdump
+          args: ["60", "https://status.d3oc.darkcubed.io/config", "-i", "{{TCPDUMP_IFACE}}", "-n", "-c", "{{TCPDUMP_COUNT}}"]
+      restartPolicy: Never

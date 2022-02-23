@@ -1,0 +1,38 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: d3oc-db-analyze
+data:
+  analyze.sql: |-
+    ANALYZE;
+---
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: d3oc-db-analyze
+spec:
+  concurrencyPolicy: Forbid
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - args:
+            - /bin/sh
+            - -c
+            - psql postgres://d3postgresql:oon6ooc4OoviTohp@test-d3oc.cmfxlqcsk74c.us-east-2.rds.amazonaws.com:5432/d3main?sslmode=disable < /scripts/analyze.sql
+            image: activeshadow/aws-cli
+            imagePullPolicy: IfNotPresent
+            name: d3oc-db-analyze
+            terminationMessagePolicy: FallbackToLogsOnError
+            volumeMounts:
+            - mountPath: /scripts
+              name: scripts
+          restartPolicy: OnFailure
+          volumes:
+          - configMap:
+              name: d3oc-db-analyze
+            name: scripts
+  schedule: 0,15,30,45 11-23 * * *
+  successfulJobsHistoryLimit: 1

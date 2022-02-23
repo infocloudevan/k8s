@@ -1,0 +1,26 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: nc-dest-{{APPLIANNCE}}
+  namespace: {{NAMESPACE}}
+spec:
+  template:
+    metadata:
+      name: nc-dest-{{APPLIANNCE}}
+    spec:
+      nodeSelector:
+        appliance: {{APPLIANCE}}
+      hostNetwork: true
+      containers:
+        - name: nc-dest-{{APPLIANNCE}}
+          image: busybox
+          command: ["/bin/sh"]
+          args: ["-c", "nc -l -p 80 > /tmp/home/core/postgres-backup.tar.gz"]
+          volumeMounts:
+            - name: home-tmp
+              mountPath: /tmp/home/core
+      restartPolicy: Never
+      volumes:
+        - name: home-tmp
+          hostPath:
+            path: /home/core

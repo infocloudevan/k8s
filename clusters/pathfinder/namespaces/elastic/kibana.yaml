@@ -1,0 +1,37 @@
+apiVersion: v1
+items:
+- apiVersion: kibana.k8s.elastic.co/v1
+  kind: Kibana
+  metadata:
+    annotations:
+      common.k8s.elastic.co/controller-version: 1.6.0
+    name: cluster
+    namespace: elastic
+  spec:
+    config:
+      elasticsearch.ssl.verificationMode: none
+      server.host: 0.0.0.0
+      xpack.reporting.encryptionKey: DFG98BU0JPE54EGPR9opijgsd98fha0g3FSKJFD80JADSFSPOJKLQWM98SD7
+      xpack.security.encryptionKey: kjksdf08923jrjknadgaH32R9HFERJPIOD0sdfioj32r098jkhjdsf90832
+      xpack.security.session.idleTimeout: 10m
+      xpack.security.session.lifespan: 8h
+    count: 1
+    elasticsearchRef:
+      name: cluster
+    http:
+      service:
+        metadata:
+          creationTimestamp: null
+        spec: {}
+      tls:
+        certificate: {}
+    podTemplate:
+      metadata:
+        creationTimestamp: null
+      spec:
+        containers: null
+    version: 7.13.2
+kind: List
+metadata:
+  resourceVersion: ""
+  selfLink: ""

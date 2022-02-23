@@ -1,0 +1,76 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  labels:
+    app: repair-threat-index
+    tags.datadoghq.com/env: saas
+    tags.datadoghq.com/service: repair-threat-index
+    tags.datadoghq.com/version: PR-185
+  name: repair-threat-index
+  namespace: kafka-saas
+spec:
+  concurrencyPolicy: Forbid
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    metadata:
+      creationTimestamp: null
+    spec:
+      template:
+        metadata:
+          labels:
+            tags.datadoghq.com/env: saas
+            tags.datadoghq.com/service: repair-threat-index
+            tags.datadoghq.com/version: PR-185
+          creationTimestamp: null
+        spec:
+          containers:
+          - args:
+            - /hyperdark
+            - --log.verbosity=5
+            - utils
+            - fixer
+            - elastic
+            - repair-threat-index
+            env:
+            - name: DD_ENV
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: metadata.labels['tags.datadoghq.com/env']
+            - name: DD_SERVICE
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: metadata.labels['tags.datadoghq.com/service']
+            - name: DD_VERSION
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: metadata.labels['tags.datadoghq.com/version']
+            - name: HYPERDARK_ES_ENDPOINTS
+              valueFrom:
+                configMapKeyRef:
+                  key: es-cluster
+                  name: endpoints
+            - name: HYPERDARK_ES_CREDENTIALS
+              valueFrom:
+                secretKeyRef:
+                  key: creds
+                  name: elastic-user
+            image: 078306444420.dkr.ecr.us-east-2.amazonaws.com/darkcubed/hyperdark:PR-185
+            imagePullPolicy: Always
+            name: hyperdark
+            resources:
+              requests:
+                cpu: 50m
+                memory: 64Mi
+            terminationMessagePath: /dev/termination-log
+            terminationMessagePolicy: File
+          dnsPolicy: ClusterFirst
+          restartPolicy: OnFailure
+          schedulerName: default-scheduler
+          securityContext: {}
+          terminationGracePeriodSeconds: 30
+  schedule: 30 5 * * *
+  successfulJobsHistoryLimit: 3
+  suspend: true

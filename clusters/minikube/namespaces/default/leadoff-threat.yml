@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: leadoff-threat
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: leadoff-threat
+  template:
+    metadata:
+      annotations:
+      labels:
+        app: leadoff-threat
+        prom: monitor 
+    spec:
+      containers:
+      - args:
+        - /hyperdark
+        - --log.verbosity=10
+        - leadoff
+        - threat
+        - manage
+        env:
+        - name: HYPERDARK_KAFKA_ENDPOINTS
+          valueFrom:
+            configMapKeyRef:
+              name: endpoints
+              key: kafka-cluster
+        - name: HYPERDARK_CACHE_ENDPOINT
+          valueFrom:
+            configMapKeyRef:
+              name: endpoints
+              key: redis-server
+        - name: HYPERDARK_DB_ENDPOINT
+          valueFrom:
+            configMapKeyRef:
+              name: endpoints
+              key: postgres-cluster
+        image: hyperdark
+        ports:
+        - containerPort: 9102
+          name: metrics
+          protocol: TCP        
+        imagePullPolicy: Never
+        name: leadoff
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: FallbackToLogsOnError

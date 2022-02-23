@@ -1,0 +1,19 @@
+apiVersion: v1
+data:
+  blackbox-server: https://prod.deception.a.darkcubed.net
+  es-cluster: https://cluster-es-http.kube-system:9200
+  kafka-cluster: kafka-kafka-bootstrap.kube-system:9092
+  kafka-cluster-external: internal-a311af838e0da11e99cf60248cac6057-1499712445.us-gov-west-1.elb.amazonaws.com:9094
+  redis-cluster: saas-gov-redis-1.yv9d8q.clustercfg.usgw1.cache.amazonaws.com:6379
+  redis-server: saas-gov-redis.yv9d8q.0001.usgw1.cache.amazonaws.com:6379
+kind: ConfigMap
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"v1","data":{"blackbox-server":"https://prod.deception.a.darkcubed.net","es-cluster":"https://cluster-es-http.kube-system:9200","kafka-cluster":"kafka-kafka-bootstrap.kube-system:9092","kafka-cluster-external":"internal-a311af838e0da11e99cf60248cac6057-1499712445.us-gov-west-1.elb.amazonaws.com:9094","redis-cluster":"saas-gov-redis-1.yv9d8q.clustercfg.usgw1.cache.amazonaws.com:6379","redis-server":"saas-gov-redis.yv9d8q.0001.usgw1.cache.amazonaws.com:6379"},"kind":"ConfigMap","metadata":{"annotations":{},"name":"endpoints","namespace":"kafka-saas"}}
+  creationTimestamp: "2019-08-19T22:57:56Z"
+  name: endpoints
+  namespace: kafka-saas
+  resourceVersion: "17072427"
+  selfLink: /api/v1/namespaces/kafka-saas/configmaps/endpoints
+  uid: c8d22621-c2d4-11e9-9ac2-06e5485013f2

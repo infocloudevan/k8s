@@ -1,0 +1,18 @@
+# Add term to be replaced by term separated by a tab.
+# Example: v1.0<tab>v2.0
+
+# From v24.0 and v24.1
+v24.0	v24.4
+v24.1	v24.4
+v24.3	v24.4
+
+# From testing and other tags
+v24.3-BF-274	v24.4
+
+v24.3-triage.580d8795	v24.4
+
+# Error on crane with the following changes; had to revert for localstash
+#ST-97	v24.4
+
+# Updates for minimal CPU resources
+cpu: 10m	cpu: 20m

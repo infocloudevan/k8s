@@ -1,0 +1,64 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: {{JOB_NAME}}
+spec:
+  concurrencyPolicy: Forbid
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - env:
+            - name: DEVICE
+              value: {{DEVICE}}
+            - name: CLIENT_LOCATION
+              value: {{IP}}
+            - name: CLIENT_PORT
+              value: "{{PORT}}"
+            - name: CLIENT_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: client-api-key
+                  name: {{JOB_NAME}}
+            - name: CLIENT_USERID
+              value: {{USER}}
+            - name: CLIENT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: client-pass
+                  name: {{JOB_NAME}}
+            - name: BLOCKLIST_LOCATION
+              value: https://app.darkcubed.com/blocklist/{{SENSOR}}
+            - name: BLOCKLIST_PORT
+              value: "443"
+            - name: SYSLOG
+              value: "0"
+            - name: SYSLOG_LOCATION
+              value: 0.0.0.0
+            - name: SYSLOG_PORT
+              value: "514"
+            - name: LOG_LEVEL
+              value: "3"
+            - name: LOG_OUTPUT
+              value: stdout
+            - name: LOG_PREFIX
+              value: ""
+            - name: DEMO
+              value: "0"
+            - name: DRYRUN
+              value: "0"
+            - name: CHUNK
+              value: "99999"
+            - name: CLEANUP_ONLY
+              value: "0"
+            image: 078306444420.dkr.ecr.us-east-2.amazonaws.com/darkcubed/stadium:{{TAG}}
+            imagePullPolicy: Always
+            name: stadium
+            resources: {}
+            terminationMessagePath: /dev/termination-log
+            terminationMessagePolicy: FallbackToLogsOnError
+          restartPolicy: Never
+  schedule: 0/5 * * * *
+  successfulJobsHistoryLimit: 1

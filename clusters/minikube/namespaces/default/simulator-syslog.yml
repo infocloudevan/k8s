@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: simulator-syslog
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: simulator-syslog
+  template:
+    metadata:
+      labels:
+        app: simulator-syslog
+        prom: monitor
+    spec:
+      containers:
+      - args:
+        - /hyperdark
+        - --log.verbosity=10
+        - simulator
+        - syslog
+        - --catcher-listener.host=hyperdark-local
+        - --interval=2m
+        - --max-messages=10
+        env:
+        - name: HYPERDARK_KAFKA_ENDPOINTS
+          valueFrom:
+            configMapKeyRef:
+              name: endpoints
+              key: kafka-cluster
+        - name: HYPERDARK_CACHE_ENDPOINT
+          valueFrom:
+            configMapKeyRef:
+              name: endpoints
+              key: redis-server
+        - name: HYPERDARK_DB_ENDPOINT
+          valueFrom:
+            configMapKeyRef:
+              name: endpoints
+              key: postgres-cluster
+        image: hyperdark
+        imagePullPolicy: Never
+        name: catcher-process
+        resources: {}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: FallbackToLogsOnError
+        volumeMounts:
+        - name: syslog-templates
+          mountPath: /simulator/syslog/data/templates
+        - mountPath: /var/certs
+          name: certs
+      dnsPolicy: ClusterFirstWithHostNet
+      hostNetwork: true
+      volumes:
+        - name: syslog-templates
+          configMap:
+            name: simulator-syslog-template
+        - name: certs
+          secret:
+            defaultMode: 420
+            secretName: syslog-tls

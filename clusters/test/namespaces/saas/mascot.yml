@@ -1,0 +1,29 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: mascot
+spec:
+  replicas: 1
+  template:
+    metadata:
+      annotations:
+      labels:
+        app:  mascot
+    spec:
+      containers:
+      - args:
+        - /mascot
+        - --log.verbosity=10
+        - kafka
+        - --delay=1s
+        env:
+        - name: MASCOT_KAFKA_KAFKA_ENDPOINTS
+          valueFrom: 
+            configMapKeyRef:
+              name: endpoints
+              key: kafka-cluster
+        image: quay.io/darkcubed/mascot:a041cb3
+        imagePullPolicy: Always
+        name: mascot 
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: FallbackToLogsOnError

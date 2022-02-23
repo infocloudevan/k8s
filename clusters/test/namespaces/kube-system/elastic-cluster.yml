@@ -1,0 +1,42 @@
+apiVersion: elasticsearch.k8s.elastic.co/v1alpha1
+kind: Elasticsearch
+metadata:
+  name: cluster
+spec:
+  version: 7.2.0
+  nodes:
+  - nodeCount: 3
+    config:
+      node.master: true
+      node.data: true
+      node.ingest: true
+    volumeClaimTemplates:
+    - metadata:
+        name: elasticsearch-data
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 100Gi
+    podTemplate:
+      spec:
+        containers:
+        - name: elasticsearch
+          env:
+          - name: ES_JAVA_OPTS
+            value: -Xms10240M -Xmx10240M
+          resources:
+            requests:
+              memory: 20Gi
+              cpu: 3
+            limits:
+              memory: 24Gi
+              cpu: 4
+        priorityClassName: system-node-critical
+        nodeSelector:
+          agentpool: elk
+        tolerations:
+        - effect: NoSchedule
+          key: dedicated
+          value: elk

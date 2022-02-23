@@ -1,0 +1,33 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: leadoff-traffic-filter
+spec:
+  replicas: 1
+  template:
+    metadata:
+      annotations:
+      labels:
+        app: leadoff-traffic-filter
+        prom: monitor
+    spec:
+      containers:
+      - args:
+        - /leadoff
+        - --log.verbosity=10
+        - traffic-filter
+        env:
+        - name: LEADOFF_TRAFFIC_FILTER_KAFKA_ENDPOINTS
+          valueFrom: 
+            configMapKeyRef:
+              name: endpoints
+              key: kafka-cluster
+        image: quay.io/darkcubed/leadoff:release-v1.0_alpha-3dc9aba
+        imagePullPolicy: Always
+        name: leadoff
+        ports:
+        - name: metrics
+          containerPort: 9102
+          protocol: TCP
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: FallbackToLogsOnError

@@ -1,0 +1,167 @@
+apiVersion: v1
+items:
+- apiVersion: elasticsearch.k8s.elastic.co/v1
+  kind: Elasticsearch
+  metadata:
+    annotations:
+      common.k8s.elastic.co/controller-version: 1.6.0
+    name: cluster
+    namespace: elastic
+  spec:
+    auth: {}
+    http:
+      service:
+        metadata:
+          creationTimestamp: null
+        spec: {}
+      tls:
+        certificate: {}
+    nodeSets:
+    - config:
+        cluster.join.timeout: 300s
+        cluster.publish.timeout: 150s
+        node.data: false
+        node.ingest: false
+        node.master: true
+        node.name: ${HOSTNAME}
+      count: 3
+      name: masters
+      podTemplate:
+        metadata: {}
+        spec:
+          affinity:
+            nodeAffinity:
+              requiredDuringSchedulingIgnoredDuringExecution:
+                nodeSelectorTerms:
+                - matchExpressions:
+                  - key: kops.k8s.io/instancegroup
+                    operator: In
+                    values:
+                    - elk-master
+            podAntiAffinity:
+              requiredDuringSchedulingIgnoredDuringExecution:
+              - labelSelector:
+                  matchExpressions:
+                  - key: elasticsearch.k8s.elastic.co/statefulset-name
+                    operator: In
+                    values:
+                    - cluster-es-masters
+                topologyKey: kubernetes.io/hostname
+          containers:
+          - env:
+            - name: READINESS_PROBE_TIMEOUT
+              value: "10"
+            - name: ES_JAVA_OPTS
+              value: -Xms4096M -Xmx4096M
+            name: elasticsearch
+            resources:
+              limits:
+                cpu: "2"
+                memory: 8Gi
+              requests:
+                cpu: "2"
+                memory: 8Gi
+          initContainers:
+          - command:
+            - sh
+            - -c
+            - |
+              bin/elasticsearch-plugin install --batch repository-s3
+            name: install-plugins
+            resources: {}
+          tolerations:
+          - effect: NoSchedule
+            key: dedicated
+            value: elk-master
+      volumeClaimTemplates:
+      - metadata:
+          name: elasticsearch-data
+        spec:
+          accessModes:
+          - ReadWriteOnce
+          resources:
+            requests:
+              storage: 10Gi
+          storageClassName: d3-gp2
+        status: {}
+    - config:
+        cluster.join.timeout: 300s
+        cluster.publish.timeout: 150s
+        node.data: true
+        node.ingest: true
+        node.master: false
+        node.name: ${HOSTNAME}
+      count: 3
+      name: data
+      podTemplate:
+        metadata: {}
+        spec:
+          affinity:
+            nodeAffinity:
+              requiredDuringSchedulingIgnoredDuringExecution:
+                nodeSelectorTerms:
+                - matchExpressions:
+                  - key: kops.k8s.io/instancegroup
+                    operator: In
+                    values:
+                    - elk
+            podAntiAffinity:
+              requiredDuringSchedulingIgnoredDuringExecution:
+              - labelSelector:
+                  matchExpressions:
+                  - key: elasticsearch.k8s.elastic.co/statefulset-name
+                    operator: In
+                    values:
+                    - cluster-es-data
+                topologyKey: kubernetes.io/hostname
+          containers:
+          - env:
+            - name: READINESS_PROBE_TIMEOUT
+              value: "10"
+            - name: ES_JAVA_OPTS
+              value: -Xms30720M -Xmx30720M
+            name: elasticsearch
+            resources:
+              limits:
+                cpu: "6"
+                memory: 56Gi
+              requests:
+                cpu: "6"
+                memory: 56Gi
+          initContainers:
+          - command:
+            - sh
+            - -c
+            - |
+              bin/elasticsearch-plugin install --batch repository-s3
+            name: install-plugins
+            resources: {}
+          tolerations:
+          - effect: NoSchedule
+            key: dedicated
+            value: elk
+      volumeClaimTemplates:
+      - metadata:
+          name: elasticsearch-data
+        spec:
+          accessModes:
+          - ReadWriteOnce
+          resources:
+            requests:
+              storage: 750Gi
+          storageClassName: d3-gp2
+        status: {}
+    secureSettings:
+    - secretName: repository-s3
+    transport:
+      service:
+        metadata:
+          creationTimestamp: null
+        spec: {}
+    updateStrategy:
+      changeBudget: {}
+    version: 7.13.2
+kind: List
+metadata:
+  resourceVersion: ""
+  selfLink: ""

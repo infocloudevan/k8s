@@ -1,0 +1,43 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: statsite
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: statsite
+    spec:
+      containers:
+      - args:
+        - statsite
+        - -f
+        - /etc/statsite.influxdb.conf
+        env:
+        - name: INFLUX_ENDPOINT
+          value: http://d3oc-metrics-influxdb:8086
+        - name: INFLUX_DB
+          value: d3oc
+        - name: K8S_NAMESPACE
+          value: test
+        image: 078306444420.dkr.ecr.us-east-2.amazonaws.com/darkcubed/statsite:v25.0
+        imagePullPolicy: IfNotPresent
+        name: statsite
+        ports:
+        - containerPort: 8125
+          name: statsd
+          protocol: UDP
+        terminationMessagePolicy: FallbackToLogsOnError
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: statsite
+spec:
+  ports:
+  - name: statsd
+    port: 8125
+    protocol: UDP
+  selector:
+    app: statsite

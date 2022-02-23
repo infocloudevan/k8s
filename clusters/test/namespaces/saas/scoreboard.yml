@@ -1,0 +1,87 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: scoreboard
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: scoreboard
+  template:
+    metadata:
+      annotations:
+      labels:
+        app: scoreboard
+    spec:
+      containers:
+      - args:
+        - /scoreboard
+        - --log.verbosity=10
+        env:
+        - name: SCOREBOARD_KAFKA_ENDPOINTS
+          valueFrom: 
+            configMapKeyRef:
+              name: endpoints
+              key: kafka-cluster
+        - name: SCOREBOARD_CACHE_ENDPOINT
+          valueFrom: 
+            configMapKeyRef:
+              name: endpoints
+              key: redis-server
+        - name: SCOREBOARD_DB_ENDPOINT
+          valueFrom: 
+            configMapKeyRef:
+              name: endpoints
+              key: postgres-cluster
+        - name: SCOREBOARD_ES_ENDPOINTS
+          valueFrom: 
+            configMapKeyRef:
+              name: endpoints
+              key: es-cluster
+        - name: SCOREBOARD_ES_CREDENTIALS
+          valueFrom: 
+            secretKeyRef:
+              name: elastic-user
+              key: creds
+        image: quay.io/darkcubed/scoreboard:release-v1.0_alpha-70697f9
+        imagePullPolicy: Always
+        name: scoreboard
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: FallbackToLogsOnError
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: scoreboard
+spec:
+  ports:
+  - name: http
+    port: 8080
+    protocol: TCP
+  - name: metrics
+    port: 9102
+    protocol: TCP
+  selector:
+    app: scoreboard
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  annotations:
+    certmanager.k8s.io/cluster-issuer: "letsencrypt"
+    kubernetes.io/ingress.class: nginx
+    kubernetes.io/tls-acme: "true"
+  name: scoreboard
+spec:
+  rules:
+  - host: wrigley.a.darkcubed.net
+    http:
+      paths:
+      - backend:
+          serviceName: scoreboard
+          servicePort: 8080
+        path: /
+  tls:
+  - hosts:
+    - wrigley.a.darkcubed.net
+    secretName: scoreboard-ingress-tls

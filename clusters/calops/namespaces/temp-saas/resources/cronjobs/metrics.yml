@@ -1,0 +1,60 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: metrics
+  namespace: temp-saas
+spec:
+  concurrencyPolicy: Forbid
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - args:
+            - bash
+            - /scripts/aggregator.sh
+            env:
+            - name: DB_URL
+              valueFrom: 
+                secretKeyRef:
+                  name: saas-db-credentials
+                  key: fullurl
+            image: activeshadow/psql-cli
+            imagePullPolicy: IfNotPresent
+            name: metrics
+            terminationMessagePath: /dev/termination-log
+            terminationMessagePolicy: FallbackToLogsOnError
+            volumeMounts:
+            - mountPath: /scripts
+              name: scripts
+          restartPolicy: OnFailure
+          volumes:
+          - configMap:
+              defaultMode: 420
+              name: metrics-scripts
+            name: scripts
+  schedule: 0 5 * * *
+  successfulJobsHistoryLimit: 0
+  suspend: false
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: metrics-scripts
+  namespace: temp-saas
+data:
+  aggregator.sh: |
+    while read -r s m; do
+      echo "INSERT INTO metrics (account_id, sensor_id, metric_type, metric_value) SELECT account_id, id, 'syslog logs', $m FROM sensors WHERE uuid = '$s';" >> /tmp/aggregator.sql
+    done < <(curl "http://prometheus-operated.temp-saas/api/v1/query?query=sum+without(instance)(increase(catcher_logs_per_sensor[24h]))" | jq -c '.data.result[]' | jq -r '(.metric.sensor + " " + .value[1])')
+
+    while read -r s m; do
+      echo "INSERT INTO metrics (account_id, sensor_id, metric_type, metric_value) SELECT account_id, id, 'threat events', $m FROM sensors WHERE uuid = '$s';" >> /tmp/aggregator.sql
+    done < <(curl "http://prometheus-operated.temp-saas/api/v1/query?query=sum+without(instance)(increase(coach_events_per_sensor[24h]))" | jq -c '.data.result[]' | jq -r '(.metric.sensor + " " + .value[1])')
+
+    while read -r s m; do
+      echo "INSERT INTO metrics (account_id, sensor_id, metric_type, metric_value) SELECT account_id, id, 'threat pipelined events', $m FROM sensors WHERE uuid = '$s';" >> /tmp/aggregator.sql
+    done < <(curl "http://prometheus-operated.temp-saas/api/v1/query?query=sum+without(instance)(increase(coach_pipelined_events_per_sensor[24h]))" | jq -c '.data.result[]' | jq -r '(.metric.sensor + " " + .value[1])')
+
+    psql $DB_URL?sslmode=disable < /tmp/aggregator.sql

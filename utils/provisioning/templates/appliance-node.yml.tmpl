@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: Node
+metadata:
+  name: {{APPLIANCE}}
+  labels:
+    appliance: {{APPLIANCE}}
+    installed: "false"
+    kubernetes.io/hostname: {{APPLIANCE}}
+    node-role.kubernetes.io/appliance: ""

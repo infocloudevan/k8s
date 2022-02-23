@@ -1,0 +1,19 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  generation: 1
+  labels:
+    app: prometheus-operator-prometheus
+    release: prometheus
+  name: prometheus-prometheus-oper-postgres-exporter
+  namespace: monitoring
+  selfLink: /apis/monitoring.coreos.com/v1/namespaces/monitoring/servicemonitors/prometheus-prometheus-oper-postgres-exporter
+spec:
+  endpoints:
+  - port: http
+  namespaceSelector:
+    matchNames:
+    - monitoring
+  selector:
+    matchLabels:
+      app: prometheus-postgres-exporter

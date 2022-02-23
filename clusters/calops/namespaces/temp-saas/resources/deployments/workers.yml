@@ -1,0 +1,44 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  labels:
+    app: workers
+  name: workers
+  namespace: temp-saas
+spec:
+  replicas: 5
+  template:
+    metadata:
+      labels:
+        app: workers
+    spec:
+      containers:
+      - args:
+        - lineup
+        - --client-mode=grpc
+        - --blackbox=scorecard.prod:8080
+        - --blackbox-timeout=30s
+        - --pubsub-provider=beanstalk
+        - --pubsub-endpoint=queue:11300
+        - --postgres=$(DB_URL)
+        - --redis=temp-saas-cache-redis-master:6379
+        - --statsd-endpoint=stats:8125
+        - --mode=both
+        - --max-db-open=10
+        - --max-db-idle=2
+        - --num-workers=100
+        env:
+        - name: DB_URL
+          valueFrom: 
+            secretKeyRef:
+              name: saas-db-credentials
+              key: fullurl
+        image: 078306444420.dkr.ecr.us-east-2.amazonaws.com/darkcubed/hyperdark:v25.4.5
+        imagePullPolicy: IfNotPresent
+        name: lineup
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File

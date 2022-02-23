@@ -1,0 +1,40 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: ticket-booth
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: ticket-booth
+    spec:
+      containers:
+      - args:
+        - ticket-booth
+        - --listen-endpoint=0.0.0.0:8080
+        - --influxdb-endpoint=http://d3oc-metrics-influxdb:8086
+        image: 078306444420.dkr.ecr.us-east-2.amazonaws.com/darkcubed/hyperdark:v25.3
+        imagePullPolicy: IfNotPresent
+        name: ticket-booth
+        ports:
+        - containerPort: 8080
+          name: grpc
+          protocol: TCP
+        resources:
+          requests:
+            cpu: 10m
+            memory: 32Mi
+        terminationMessagePolicy: FallbackToLogsOnError
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ticket-booth
+spec:
+  ports:
+  - name: grpc
+    port: 8080
+    protocol: TCP
+  selector:
+    app: ticket-booth

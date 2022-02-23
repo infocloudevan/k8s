@@ -1,0 +1,51 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  labels:
+    app: mascot
+  name: mascot
+  namespace: demo-saas
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: mascot
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: mascot
+    spec:
+      containers:
+      - args:
+        - mascot
+        - --coach-endpoint=http://coach/job
+        - --scoreboard-endpoint=http://ui/blocklist
+        - --postgres-appliance-endpoint=$(DB_URL)
+        - --postgres-d3oc-endpoint=postgres://d3postgresql:pSE8BH1IRIbiso41LX@d3oc.cmfxlqcsk74c.us-east-2.rds.amazonaws.com:5432/d3main
+        env:
+        - name: DB_URL
+          valueFrom: 
+            secretKeyRef:
+              name: saas-db-credentials
+              key: fullurl
+        image: 078306444420.dkr.ecr.us-east-2.amazonaws.com/darkcubed/hyperdark:v25.4.5
+        imagePullPolicy: IfNotPresent
+        name: mascot
+        resources:
+          requests:
+            cpu: 500m
+            memory: 256Mi
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30

@@ -1,0 +1,81 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"batch/v1beta1","kind":"CronJob","metadata":{"annotations":{},"creationTimestamp":"2020-03-12T15:02:35Z","name":"fix-zero-scores","namespace":"kafka-saas","selfLink":"/apis/batch/v1beta1/namespaces/kafka-saas/cronjobs/fix-zero-scores","uid":"81d7f4c2-6472-11ea-9ac2-06e5485013f2"},"spec":{"concurrencyPolicy":"Forbid","failedJobsHistoryLimit":1,"jobTemplate":{"metadata":{"creationTimestamp":null},"spec":{"template":{"metadata":{"creationTimestamp":null},"spec":{"containers":[{"args":["/hyperdark","--log.verbosity=10","utils","fix-zero-scores"],"env":[{"name":"HYPERDARK_KAFKA_ENDPOINTS","valueFrom":{"configMapKeyRef":{"key":"kafka-cluster","name":"endpoints"}}},{"name":"HYPERDARK_CACHE_ENDPOINT","valueFrom":{"configMapKeyRef":{"key":"redis-server","name":"endpoints"}}},{"name":"HYPERDARK_CACHE_CLUSTER_ENDPOINTS","valueFrom":{"configMapKeyRef":{"key":"redis-cluster","name":"endpoints"}}},{"name":"HYPERDARK_ES_ENDPOINTS","valueFrom":{"configMapKeyRef":{"key":"es-cluster","name":"endpoints"}}},{"name":"HYPERDARK_ES_CREDENTIALS","valueFrom":{"secretKeyRef":{"key":"creds","name":"elastic"}}},{"name":"HYPERDARK_ES_SENSOR_SALT","valueFrom":{"secretKeyRef":{"key":"sensor-salt","name":"elastic"}}},{"name":"HYPERDARK_DB_ENDPOINT","valueFrom":{"secretKeyRef":{"key":"postgres-cluster","name":"endpoints"}}}],"image":"944254975049.dkr.ecr.us-gov-west-1.amazonaws.com/darkcubed-gov/hyperdark:b127bf1","imagePullPolicy":"IfNotPresent","name":"fixer","resources":{},"terminationMessagePath":"/dev/termination-log","terminationMessagePolicy":"File"}],"dnsPolicy":"ClusterFirst","restartPolicy":"OnFailure","schedulerName":"default-scheduler","securityContext":{},"terminationGracePeriodSeconds":30}}}},"schedule":"0 */6 * * *","successfulJobsHistoryLimit":1,"suspend":true}}
+  creationTimestamp: "2020-03-12T15:02:35Z"
+  name: fix-zero-scores
+  namespace: kafka-saas
+  resourceVersion: "85722894"
+  selfLink: /apis/batch/v1beta1/namespaces/kafka-saas/cronjobs/fix-zero-scores
+  uid: 81d7f4c2-6472-11ea-9ac2-06e5485013f2
+spec:
+  concurrencyPolicy: Forbid
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    metadata:
+      creationTimestamp: null
+    spec:
+      template:
+        metadata:
+          creationTimestamp: null
+        spec:
+          containers:
+          - args:
+            - /hyperdark
+            - --log.verbosity=10
+            - utils
+            - fix-zero-scores
+            env:
+            - name: HYPERDARK_KAFKA_ENDPOINTS
+              valueFrom:
+                configMapKeyRef:
+                  key: kafka-cluster
+                  name: endpoints
+            - name: HYPERDARK_CACHE_ENDPOINT
+              valueFrom:
+                configMapKeyRef:
+                  key: redis-server
+                  name: endpoints
+            - name: HYPERDARK_CACHE_CLUSTER_ENDPOINTS
+              valueFrom:
+                configMapKeyRef:
+                  key: redis-cluster
+                  name: endpoints
+            - name: HYPERDARK_ES_ENDPOINTS
+              valueFrom:
+                configMapKeyRef:
+                  key: es-cluster
+                  name: endpoints
+            - name: HYPERDARK_ES_CREDENTIALS
+              valueFrom:
+                secretKeyRef:
+                  key: creds
+                  name: elastic
+            - name: HYPERDARK_ES_SENSOR_SALT
+              valueFrom:
+                secretKeyRef:
+                  key: sensor-salt
+                  name: elastic
+            - name: HYPERDARK_DB_ENDPOINT
+              valueFrom:
+                secretKeyRef:
+                  key: postgres-cluster
+                  name: endpoints
+            image: 944254975049.dkr.ecr.us-gov-west-1.amazonaws.com/darkcubed-gov/hyperdark:b127bf1
+            imagePullPolicy: IfNotPresent
+            name: fixer
+            resources: {}
+            terminationMessagePath: /dev/termination-log
+            terminationMessagePolicy: File
+          dnsPolicy: ClusterFirst
+          restartPolicy: OnFailure
+          schedulerName: default-scheduler
+          securityContext: {}
+          terminationGracePeriodSeconds: 30
+  schedule: 0 */6 * * *
+  successfulJobsHistoryLimit: 1
+  suspend: true
+status:
+  lastScheduleTime: "2020-04-28T18:00:00Z"

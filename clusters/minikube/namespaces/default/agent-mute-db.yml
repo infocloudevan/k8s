@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: agent-mute-db
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: agent-mute-db
+  template:
+    metadata:
+      labels:
+        app: agent-mute-db
+        prom: monitor 
+    spec:
+      containers:
+      - args:
+        - /hyperdark
+        - --log.verbosity=10
+        - agent
+        - mute
+        - db
+        env:
+        - name: HYPERDARK_KAFKA_ENDPOINTS
+          valueFrom: 
+            configMapKeyRef:
+              name: endpoints
+              key: kafka-cluster
+        - name: HYPERDARK_DB_ENDPOINT
+          valueFrom: 
+            configMapKeyRef:
+              name: endpoints
+              key: postgres-cluster
+        image: hyperdark
+        ports:
+        - containerPort: 9102
+          name: metrics
+          protocol: TCP        
+        imagePullPolicy: Never
+        name: agent
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: FallbackToLogsOnError

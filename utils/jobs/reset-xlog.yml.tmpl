@@ -1,0 +1,24 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: reset-xlog-{{APPLIANCE}}
+  namespace: {{NAMESPACE}}
+spec:
+  template:
+    metadata:
+      name: reset-xlog-{{APPLIANCE}}
+    spec:
+      nodeSelector:
+        appliance: {{APPLIANCE}}
+      containers:
+        - name: reset-xlog-{{APPLIANCE}}
+          image: quay.io/darkcubed/uidb:v18.1
+          command: ["gosu", "postgres", "pg_resetxlog", "/var/lib/postgresql/data"]
+          volumeMounts:
+            - name: xlog-tmp
+              mountPath: /var/lib/postgresql/data
+      restartPolicy: Never
+      volumes:
+        - name: xlog-tmp
+          hostPath:
+            path: /opt/darkcubed/postgres

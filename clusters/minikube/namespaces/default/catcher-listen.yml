@@ -1,0 +1,90 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: catcher-listener
+  name: catcher-listener
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: catcher-listener
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: catcher-listener
+        prom: monitor
+    spec:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: app
+                operator: In
+                values:
+                - catcher-listener
+            topologyKey: kubernetes.io/hostname
+      containers:
+      - args:
+        - /hyperdark
+        - --log.verbosity=10
+        - catcher
+        - listen
+        env:
+        - name: HYPERDARK_KAFKA_ENDPOINTS
+          valueFrom:
+            configMapKeyRef:
+              name: endpoints
+              key: kafka-cluster
+        - name: HYPERDARK_CACHE_ENDPOINT
+          valueFrom:
+            configMapKeyRef:
+              name: endpoints
+              key: redis-server
+        - name: HYPERDARK_DB_ENDPOINT
+          valueFrom:
+            configMapKeyRef:
+              name: endpoints
+              key: postgres-cluster
+        image: hyperdark
+        ports:
+        - containerPort: 9102
+          name: metrics
+          protocol: TCP
+        imagePullPolicy: Never
+        name: catcher
+        ports:
+        - containerPort: 9102
+          hostPort: 9102
+          name: metrics
+          protocol: TCP
+        resources: {}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: FallbackToLogsOnError
+        volumeMounts:
+        - mountPath: /var/certs
+          name: certs
+      dnsPolicy: ClusterFirstWithHostNet
+      hostNetwork: true
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
+      tolerations:
+      - effect: NoSchedule
+        key: dedicated
+        value: udp-syslog
+      volumes:
+      - name: certs
+        secret:
+          defaultMode: 420
+          secretName: syslog-tls

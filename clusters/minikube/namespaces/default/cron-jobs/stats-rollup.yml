@@ -1,0 +1,47 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: stats-rollup
+spec:
+  schedule: 0/5 * * * *
+  concurrencyPolicy: Forbid
+  suspend: false
+  jobTemplate:
+    metadata:
+      creationTimestamp: null
+    spec:
+      template:
+        metadata:
+          creationTimestamp: null
+        spec:
+          containers:
+            - name: stats-rollup
+              image: hyperdark
+              imagePullPolicy: Never
+              args:
+                - /hyperdark
+                - '--log.verbosity=10'
+                - utils
+                - stats-rollup
+                - --stats-rollup.bucket-size=300
+              env:
+              - name: HYPERDARK_CACHE_ENDPOINT
+                valueFrom:
+                  configMapKeyRef:
+                    name: endpoints
+                    key: redis-server
+              - name: HYPERDARK_DB_ENDPOINT
+                valueFrom:
+                  configMapKeyRef:
+                    name: endpoints
+                    key: postgres-cluster
+              resources: {}
+              terminationMessagePath: /dev/termination-log
+              terminationMessagePolicy: FallbackToLogsOnError
+          restartPolicy: Never
+          terminationGracePeriodSeconds: 3000
+          dnsPolicy: ClusterFirst
+          securityContext: {}
+          schedulerName: default-scheduler
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 1

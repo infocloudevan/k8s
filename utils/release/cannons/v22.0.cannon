@@ -1,0 +1,16 @@
+# Add term to be replaced by term separated by a tab.
+
+# v21.3	v22.0
+# v21.4	v22.0
+# SP-72	v22.0
+# v22.0-rc0	v22.0
+# v22.0-rc1	v22.0
+# v22.0-rc2	v22.0
+# v22.0-rc3	v22.0
+# v22.0-rc4	v22.0
+
+v22.0	SP-72
+https://test.deception.darkcubed.io	https://test.deception.darkcubed.io/grpc
+https://gb.shades.darkcubed.io	https://test.deception.darkcubed.io/grpc
+graybox-cert	d3oc-cert
+graybox-client=true	graybox-client=false

@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  creationTimestamp: "2019-08-20T07:31:06Z"
+  labels:
+    managed-by: prometheus-operator
+    prometheus-name: prometheus
+  name: prometheus-prometheus-rulefiles-0
+  namespace: kafka-saas
+  ownerReferences:
+  - apiVersion: monitoring.coreos.com/v1
+    blockOwnerDeletion: true
+    controller: true
+    kind: Prometheus
+    name: prometheus
+    uid: 78d11b42-c31c-11e9-845f-0a9658482414
+  resourceVersion: "6136333"
+  selfLink: /api/v1/namespaces/kafka-saas/configmaps/prometheus-prometheus-rulefiles-0
+  uid: 78e26d71-c31c-11e9-9cf6-0248cac6057a

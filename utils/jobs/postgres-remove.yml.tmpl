@@ -1,0 +1,24 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: postgres-remove-{{APPLIANCE}}
+  namespace: {{NAMESPACE}}
+spec:
+  template:
+    metadata:
+      name: postgres-remove-{{APPLIANCE}}
+    spec:
+      nodeSelector:
+        appliance: {{APPLIANCE}}
+      containers:
+        - name: postgres-remove-{{APPLIANCE}}
+          image: busybox
+          command: ["rm", "-fr", "/tmp/opt/darkcubed/postgres/"]
+          volumeMounts:
+            - name: settings-tmp
+              mountPath: /tmp/opt/darkcubed
+      restartPolicy: Never
+      volumes:
+        - name: settings-tmp
+          hostPath:
+            path: /opt/darkcubed

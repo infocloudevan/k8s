@@ -1,0 +1,38 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: saas-db-analyze
+data:
+  analyze.sql: |-
+    ANALYZE;
+---
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: saas-db-analyze
+spec:
+  concurrencyPolicy: Forbid
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - args:
+            - /bin/sh
+            - -c
+            - psql postgres://dark3:Qv8CYJfKDYR7PNed@saas-testing.cmfxlqcsk74c.us-east-2.rds.amazonaws.com:5432/dark3?sslmode=disable < /scripts/analyze.sql
+            image: activeshadow/aws-cli
+            imagePullPolicy: IfNotPresent
+            name: saas-db-analyze
+            terminationMessagePolicy: FallbackToLogsOnError
+            volumeMounts:
+            - mountPath: /scripts
+              name: scripts
+          restartPolicy: OnFailure
+          volumes:
+          - configMap:
+              name: saas-db-analyze
+            name: scripts
+  schedule: 0,15,30,45 11-23 * * *
+  successfulJobsHistoryLimit: 1

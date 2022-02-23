@@ -1,0 +1,8 @@
+apiVersion: v1
+data:
+  postgres-metabase: cG9zdGdyZXM6Ly9wb3N0Z3JlczpFZFRDOWg2TzFpeGJiNlJsUXdCbkBtZXRhYmFzZS5jbWZ4bHFjc2s3NGMudXMtZWFzdC0yLnJkcy5hbWF6b25hd3MuY29tOjU0MzIvbWV0YWJhc2U=
+kind: Secret
+metadata:
+  name: database
+  namespace: metabase
+type: Opaque

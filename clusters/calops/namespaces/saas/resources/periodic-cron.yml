@@ -1,0 +1,25 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: periodic
+spec:
+  concurrencyPolicy: Forbid
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - args:
+            - periodic
+            - --postgres-endpoint=postgres://dark3:Qv8CYJfKDYR7PNed@saas-testing.cmfxlqcsk74c.us-east-2.rds.amazonaws.com:5432/dark3
+            - --redis-endpoint=saas-cache-redis:6379
+            image: 078306444420.dkr.ecr.us-east-2.amazonaws.com/darkcubed/hyperdark:v25.0
+            imagePullPolicy: IfNotPresent
+            name: periodic
+            terminationMessagePolicy: FallbackToLogsOnError
+          dnsPolicy: ClusterFirst
+          restartPolicy: OnFailure
+  schedule: 0/5 * * * *
+  successfulJobsHistoryLimit: 0
+  suspend: false

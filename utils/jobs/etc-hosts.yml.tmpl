@@ -1,0 +1,24 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: etc-hosts-{{APPLIANCE}}
+  namespace: {{NAMESPACE}}
+spec:
+  template:
+    metadata:
+      name: etc-hosts-{{APPLIANCE}}
+    spec:
+      nodeSelector:
+        appliance: {{APPLIANCE}}
+      containers:
+        - name: etc-hosts-{{APPLIANCE}}
+          image: busybox
+          command: ["/bin/sh", "-c", "echo '35.194.42.185 test.deception.darkcubed.io prod.deception.darkcubed.io' >> /tmp/etc/hosts"]
+          volumeMounts:
+            - name: etc-tmp
+              mountPath: /tmp/etc
+      restartPolicy: Never
+      volumes:
+        - name: etc-tmp
+          hostPath:
+            path: /etc

@@ -1,0 +1,101 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: logstash-config
+data:
+  darkcubed.conf: |
+    input {
+      http { port => 8080 }
+    }
+
+    filter {
+      grok {
+        # LEAVE GROK UPON FIRST MATCH
+        #break_on_match => true
+
+        match => [ "message", "<%{NONNEGINT}>%{NONNEGINT} %{NUMBER:tstamp} %{DATA:loghost} %{DATA:type} %{GREEDYDATA:data}" ]
+      }
+
+      kv {
+        source       => "data"
+        trim_value   => "<>\[\],"
+        include_keys => [ "src", "dst", "sport", "dport", "protocol" ]
+      }
+
+      date {
+        match => [ "tstamp", "UNIX" ]
+      }
+
+      mutate {
+        add_field => { "syslog_port" => "%{[headers][http_x_syslog_port]}" }
+      }
+
+      mutate {
+        convert => [ "sport",       "integer" ]
+        convert => [ "dport",       "integer" ]
+        convert => [ "syslog_port", "integer" ]
+      }
+
+      grok {
+        match => [ "data", "%{GREEDYDATA} pattern: %{GREEDYDATA:pattern}" ]
+      }
+    }
+
+    output {
+      elasticsearch { hosts => ['es-kibana:9200'] }
+    }
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: logstash
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: logstash
+    spec:
+      containers:
+      - name: logstash
+        image: logstash
+        ports:
+        - containerPort: 8080
+        args:
+        - -f
+        - /etc/logstash/darkcubed/darkcubed.conf
+        volumeMounts:
+        - mountPath: /etc/logstash/darkcubed
+          name: logstash-config
+      volumes:
+      - name: logstash-config
+        configMap:
+          name: logstash-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: logstash
+spec:
+  ports:
+  - name: logstash
+    port: 8080
+    protocol: TCP
+  selector:
+    app: logstash
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  annotations:
+    ingress.kubernetes.io/client-body-buffer-size: 1024k
+    kubernetes.io/ingress.class: nginx-internal
+  name: logstash
+spec:
+  rules:
+  - host: elk.darkcubed.calops
+    http:
+      paths:
+      - backend:
+          serviceName: logstash
+          servicePort: 8080

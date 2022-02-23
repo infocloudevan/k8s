@@ -1,0 +1,41 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  labels:
+    app: coach
+  name: coach
+  namespace: saas
+spec:
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        app: coach
+    spec:
+      containers:
+      - args:
+        - coach
+        - --http-endpoint=0.0.0.0:80
+        - --pubsub-provider=beanstalk
+        - --pubsub-endpoint=100.71.229.46:11300
+        - --postgres=postgres://dark3:Qv8CYJfKDYR7PNed@saas.cmfxlqcsk74c.us-east-2.rds.amazonaws.com:5432/dark3
+        - --redis=100.64.17.242:6379
+        - --max-accumulated-threats=500
+        - --accumulated-threats-duration=1m
+        - --run-scheduler=false
+        image: 078306444420.dkr.ecr.us-east-2.amazonaws.com/darkcubed/hyperdark:v25.4.3
+        imagePullPolicy: IfNotPresent
+        name: coach
+        ports:
+        - containerPort: 80
+          protocol: TCP
+        - containerPort: 9102
+          name: metrics
+          protocol: TCP
+        resources:
+          requests:
+            cpu: 30m
+            memory: 1Gi
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+      restartPolicy: Always

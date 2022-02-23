@@ -1,0 +1,65 @@
+replicaCount: 1
+image:
+  #repository: 078306444420.dkr.ecr.us-east-2.amazonaws.com/darkcubed/burrow
+  repository: ifoodhub/burrow
+  tag: 1.3.3
+  pullPolicy: IfNotPresent
+
+fullnameOverride: "burrow"
+
+service:
+  type: ClusterIP
+
+burrow:
+  templateDir: /etc/burrow/templates
+  config:
+    ## Maps to [general] section in burrow.toml
+    general:
+      pidfile: burrow.pid
+    ## Maps to [logging] section in burrow.toml
+    logging:
+      level: info
+    ## Maps to [zookeeper] section in burrow.toml
+    zookeeper:
+      servers:
+        - kafka-zookeeper-headless.default.svc:2181
+      rootPath: "/burrow"
+      timeout: 6
+    ## Maps to [httpserver] section in burrow.toml
+    httpserver:
+      default:
+        address: ":8000"
+        timeout: 300
+    ## Maps to [client-profile] section in burrow.toml
+    clientProfile:
+      profile_dark3:
+        kafkaVersion: "2.0.1"
+        clientId: "burrow-dark3"
+    ## Maps to [cluster] section in burrow.toml
+    cluster:
+      local:
+        className: kafka
+        client-profile: "profile_dark3"
+        topicRefresh: 60
+        offsetRefresh: 30
+        servers:
+          - kafka.default.svc:9092
+    consumer:
+      local:
+        className: kafka
+        clusterName: local
+        groupBlacklist: "^(burrow-local).*$"
+        groupWhitelist: ""
+        clientProfile: "profile_dark3"
+        servers:
+          - kafka.default.svc:9092
+      local_zk:
+        className: kafka_zk
+        clusterName: local
+        zookeeper-path: "/local"
+        zookeeper-timeout: 30
+        groupBlacklist: "^(burrow-local).*$"
+        groupWhitelist: ""
+        clientProfile: "profile_dark3"
+        servers:
+          - kafka.default.svc:9092

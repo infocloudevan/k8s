@@ -1,0 +1,84 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  annotations:
+    deployment.kubernetes.io/revision: "2"
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"extensions/v1beta1","kind":"Deployment","metadata":{"annotations":{},"labels":{"app":"catcher-processor-lm"},"name":"catcher-processor-lm","namespace":"kafka-saas"},"spec":{"progressDeadlineSeconds":2147483647,"replicas":1,"revisionHistoryLimit":10,"selector":{"matchLabels":{"app":"catcher-processor-lm"}},"strategy":{"rollingUpdate":{"maxSurge":1,"maxUnavailable":1},"type":"RollingUpdate"},"template":{"metadata":{"annotations":{"date":"1595018266"},"creationTimestamp":null,"labels":{"app":"catcher-processor-lm"}},"spec":{"containers":[{"args":["/hyperdark","--log.verbosity=10","catcher","process","--kafka.input-topic=IncomingSyslogStream-LM","--kafka.group-name=IncomingSyslog-LM"],"env":[{"name":"HYPERDARK_KAFKA_ENDPOINTS","valueFrom":{"configMapKeyRef":{"key":"kafka-cluster","name":"endpoints"}}},{"name":"HYPERDARK_CACHE_ENDPOINT","valueFrom":{"configMapKeyRef":{"key":"redis-server","name":"endpoints"}}},{"name":"HYPERDARK_CACHE_CLUSTER_ENDPOINTS","valueFrom":{"configMapKeyRef":{"key":"redis-cluster","name":"endpoints"}}}],"image":"944254975049.dkr.ecr.us-gov-west-1.amazonaws.com/darkcubed-gov/hyperdark:f2d65ca","imagePullPolicy":"Always","name":"catcher","resources":{},"terminationMessagePath":"/dev/termination-log","terminationMessagePolicy":"FallbackToLogsOnError"}],"dnsPolicy":"ClusterFirst","restartPolicy":"Always","schedulerName":"default-scheduler","securityContext":{},"terminationGracePeriodSeconds":30}}}}
+  creationTimestamp: "2020-09-12T14:18:59Z"
+  generation: 2
+  labels:
+    app: catcher-processor-lm
+  name: catcher-processor-lm
+  namespace: kafka-saas
+  resourceVersion: "131840643"
+  selfLink: /apis/extensions/v1beta1/namespaces/kafka-saas/deployments/catcher-processor-lm
+  uid: e65ac72a-f502-11ea-bed2-026dc0347f7e
+spec:
+  progressDeadlineSeconds: 2147483647
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: catcher-processor-lm
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+    type: RollingUpdate
+  template:
+    metadata:
+      annotations:
+        date: "1595018266"
+      creationTimestamp: null
+      labels:
+        app: catcher-processor-lm
+    spec:
+      containers:
+      - args:
+        - /hyperdark
+        - --log.verbosity=10
+        - catcher
+        - process
+        - --kafka.input-topic=IncomingSyslogStream-LM
+        - --kafka.group-name=IncomingSyslog-LM
+        env:
+        - name: HYPERDARK_KAFKA_ENDPOINTS
+          valueFrom:
+            configMapKeyRef:
+              key: kafka-cluster
+              name: endpoints
+        - name: HYPERDARK_CACHE_ENDPOINT
+          valueFrom:
+            configMapKeyRef:
+              key: redis-server
+              name: endpoints
+        - name: HYPERDARK_CACHE_CLUSTER_ENDPOINTS
+          valueFrom:
+            configMapKeyRef:
+              key: redis-cluster
+              name: endpoints
+        image: 944254975049.dkr.ecr.us-gov-west-1.amazonaws.com/darkcubed-gov/hyperdark:f2d65ca
+        imagePullPolicy: Always
+        name: catcher
+        resources: {}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: FallbackToLogsOnError
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
+status:
+  availableReplicas: 1
+  conditions:
+  - lastTransitionTime: "2020-09-12T14:18:59Z"
+    lastUpdateTime: "2020-09-12T14:18:59Z"
+    message: Deployment has minimum availability.
+    reason: MinimumReplicasAvailable
+    status: "True"
+    type: Available
+  observedGeneration: 2
+  readyReplicas: 1
+  replicas: 1
+  updatedReplicas: 1

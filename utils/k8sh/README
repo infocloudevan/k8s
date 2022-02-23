@@ -1,0 +1,16 @@
+k8sh-shell
+==========
+
+* Rename to k8sh
+* Mark as executable
+* Move to somewhere in your path
+
+k8sh-config
+===========
+
+* Move to $HOME/.k8sh
+
+Usage
+=====
+
+* Once it's in your path, just run k8sh

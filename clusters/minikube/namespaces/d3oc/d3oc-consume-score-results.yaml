@@ -1,0 +1,49 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: consume-score-results
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: consume-score-results
+  template:
+    metadata:
+      labels:
+        app: consume-score-results
+    spec:
+      containers:
+        - name: consume-score-results
+          image: consume_score_results:3.0
+          args:
+            - python3
+            - consume_score_results.py
+            - '-v'
+          ports:
+            - name: metrics
+              containerPort: 9102
+              protocol: TCP
+          env:
+            - name: D3OC_BEANSTALKD_SERVER
+              valueFrom:
+                configMapKeyRef:
+                  name: endpoints
+                  key: d3oc-beanstalkd
+            - name: D3OC_PUBSUB_ENDPOINT
+              valueFrom:
+                configMapKeyRef:
+                  name: endpoints
+                  key: d3oc-pubsub
+          resources:
+            limits:
+              cpu: 40m
+              memory: 32Mi
+            requests:
+              cpu: 40m
+              memory: 32Mi
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: FallbackToLogsOnError
+          imagePullPolicy: Never
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+      dnsPolicy: ClusterFirst

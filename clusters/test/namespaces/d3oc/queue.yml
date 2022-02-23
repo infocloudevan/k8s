@@ -1,0 +1,52 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: queue
+spec:
+  replicas: 1
+  template:
+    metadata:
+      annotations:
+        prometheus.io/scrape: "true"
+      labels:
+        app: queue
+    spec:
+      containers:
+      - image: activeshadow/beanstalkd
+        imagePullPolicy: IfNotPresent
+        name: beanstalk
+        ports:
+        - containerPort: 11300
+          protocol: TCP
+        resources:
+          requests:
+            cpu: 10m
+            memory: 32Mi
+        terminationMessagePolicy: FallbackToLogsOnError
+      - args:
+        - /darkmon
+        - stalker
+        image: 078306444420.dkr.ecr.us-east-2.amazonaws.com/darkcubed/darkmon
+        imagePullPolicy: IfNotPresent
+        name: stalker
+        ports:
+        - containerPort: 9102
+          name: metrics
+          protocol: TCP
+        resources:
+          requests:
+            cpu: 10m
+            memory: 32Mi
+        terminationMessagePolicy: FallbackToLogsOnError
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: queue
+spec:
+  ports:
+  - name: beanstalk
+    port: 11300
+    protocol: TCP
+  selector:
+    app: queue

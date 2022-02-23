@@ -1,0 +1,6 @@
+# Add term to be replaced by term separated by a tab.
+# Example: v1.0<tab>v2.0
+
+v23.1	v23.2
+prod.deception.aws.darkcubed.net	prod.deception.a.darkcubed.net
+test.deception.aws.darkcubed.net	test.deception.a.darkcubed.net

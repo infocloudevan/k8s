@@ -1,0 +1,13 @@
+Deployment,Image,Build,Notes
+api,hyperdark,9eedfd1,TBD
+d3oc-workers-geo,lookup_geo,latest,TBD
+d3oc-workers-whois,lookup_whois,cff2438,TBD
+pathfinder,hyperdark,1074e97,TBD
+prod-metrics-influxdb,influxdb,1.4-alpine,TBD
+queue,beanstalkd,N/A,TBD
+scorecard,hyperdark,a168faa,TBD
+scorekeeper,hyperdark,v25.4,TBD
+statistician,statistician,3651df7,TBD
+statistician-dns,statistician,3651df7,TBD
+statsite,statsite,v25.4,TBD
+ticket-booth,hyperdark,v25.4,TBD

@@ -1,0 +1,35 @@
+# Add term to be replaced by term separated by a tab.
+# Example: v1.0<tab>v2.0
+
+# From v21.x and v22.0
+
+v21.0	v23.0
+v21.1	v23.0
+v21.2	v23.0
+v21.2-certs	v23.0
+v21.3	v23.0
+v21.4	v23.0
+v22.0	v23.0
+
+# From testing
+
+SP-72	v23.0
+
+# From v23.0 RCs
+
+v23.0-rc0	v23.0
+v23.0-rc1	v23.0
+v23.0-rc2	v23.0
+v23.0-rc3	v23.0
+v23.0-rc4	v23.0
+v23.0-rc5	v23.0
+
+# Changes to statsite and workers
+
+https://prod.deception.darkcubed.io	https://prod.deception.darkcubed.io/grpc
+
+# Changes to batboy
+
+- --conn-logs=/opt/logs/D3_conn.log	- --base-log-path=/opt/logs\r        - --conn-log-name=D3_conn.log
+- --dns-logs=/opt/logs/D3_dns.log	- --dns-log-name=D3_dns.log
+- --syslog-logs=/opt/logs/D3_syslog.log	- --syslog-logs=D3_syslog.log

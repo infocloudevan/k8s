@@ -1,0 +1,38 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cricket-db-analyze
+data:
+  analyze.sql: |-
+    ANALYZE;
+---
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: cricket-db-analyze
+spec:
+  concurrencyPolicy: Forbid
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - args:
+            - /bin/sh
+            - -c
+            - psql postgres://dark3:yhk9fwTOAKb0h@cricket.cmfxlqcsk74c.us-east-2.rds.amazonaws.com:5432/dark3?sslmode=disable < /scripts/analyze.sql
+            image: activeshadow/aws-cli
+            imagePullPolicy: IfNotPresent
+            name: cricket-db-analyze
+            terminationMessagePolicy: FallbackToLogsOnError
+            volumeMounts:
+            - mountPath: /scripts
+              name: scripts
+          restartPolicy: OnFailure
+          volumes:
+          - configMap:
+              name: cricket-db-analyze
+            name: scripts
+  schedule: 0,15,30,45 11-23 * * *
+  successfulJobsHistoryLimit: 1

@@ -1,0 +1,75 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pathfinder
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pathfinder
+  template:
+    metadata:
+      labels:
+        app: pathfinder
+    spec:
+      containers:
+      - args:
+        - /hyperdark
+        - --log.verbosity=10
+        - d3oc
+        - pathfinder
+        - --app.listen-endpoint=0.0.0.0:8080
+        - --app.algorithm=none
+        env:
+        - name: KAFKA_ENDPOINTS
+          valueFrom:
+            configMapKeyRef:
+              name: endpoints
+              key: kafka-cluster
+        - name: PATHFINDER_DB_ENDPOINT
+          valueFrom:
+            configMapKeyRef:
+              name: endpoints
+              key: pathfinder-db
+        image: hyperdark
+        imagePullPolicy: Never
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "250m"
+          limits:
+            memory: "128Mi"
+            cpu: "500m"
+        name: pathfinder
+        ports:
+        - containerPort: 8080
+          name: grpc
+          protocol: TCP
+        - containerPort: 9102
+          name: metrics
+          protocol: TCP
+        resources:
+          requests:
+            cpu: 500m
+            memory: 32Mi
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: FallbackToLogsOnError
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    prom: monitor
+  name: pathfinder
+spec:
+  ports:
+  - name: grpc
+    port: 8080
+    protocol: TCP
+    targetPort: 8080
+  - name: metrics
+    port: 9102
+    protocol: TCP
+    targetPort: 9102
+  selector:
+    app: pathfinder

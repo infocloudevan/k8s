@@ -1,0 +1,29 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: dark-dhcp
+spec:
+  replicas: 0
+  template:
+    metadata:
+      labels:
+        app: dark-dhcp
+    spec:
+      containers:
+      - args:
+        - dark-dhcp
+        - --listen-address=192.168.123.1
+        - --range-begin=192.168.123.100
+        - --range-size=100
+        - --subnet-mask=255.255.255.0
+        - --gateway-address=192.168.123.1
+        - --dns-server=192.168.123.1
+        image: quay.io/darkcubed/dark-dhcp:v0.0.0
+        imagePullPolicy: Always
+        name: dhcp
+        terminationMessagePolicy: FallbackToLogsOnError
+      hostNetwork: true
+      imagePullSecrets:
+      - name: quay.io
+      nodeSelector:
+        appliance: btr-test-appliance

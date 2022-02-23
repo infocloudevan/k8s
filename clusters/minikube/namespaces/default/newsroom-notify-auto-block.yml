@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: newsroom-notify-auto-block
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: newsroom-notify-auto-block
+  template:
+    metadata:
+      annotations:
+      labels:
+        app: newsroom-notify-auto-block
+        prom: monitor
+    spec:
+      containers:
+      - args:
+        - /hyperdark
+        - --log.verbosity=10
+        - newsroom
+        - notify
+        - auto-block
+        - --app.root-url=http://localhost:8080
+        env:
+        - name: HYPERDARK_KAFKA_ENDPOINTS
+          valueFrom:
+            configMapKeyRef:
+              name: endpoints
+              key: kafka-cluster
+        - name: HYPERDARK_DB_ENDPOINT
+          valueFrom:
+            configMapKeyRef:
+              name: endpoints
+              key: postgres-cluster
+        - name: HYPERDARK_CACHE_ENDPOINT
+          valueFrom:
+            configMapKeyRef:
+              name: endpoints
+              key: redis-server
+        image: hyperdark
+        ports:
+        - containerPort: 9102
+          name: metrics
+          protocol: TCP
+        imagePullPolicy: Never
+        name: newsroom
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: FallbackToLogsOnError

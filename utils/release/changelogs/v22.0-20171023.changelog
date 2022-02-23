@@ -1,0 +1,19 @@
+*  Now our notifications for when we perform automatic blocking will
+   actually communicate that in the subject line... maybe the alerts
+   will make more sense now!
+*  The D3 appliance can now send an RFC5424 compliant Syslog message (a
+   very simple message). You might want to use this to send D3 scoring
+   to *cough* another tool *cough*. If this is something that would
+   interest you, please let [sales](info@darkcubed.com) know and we can
+   get it added.
+*  The username has always appeared in the middle of the toolbar,
+   randomly dropped there and never moved. That is now cleaned up by
+   simply moving it to the right on the toolbar (**huge** lift on our
+   part -- more specifically, a one-line code change). 
+*  Bug fixes:
+  *  The audit report was no longer available until the page was
+     refreshed. That has been corrected, view away!
+  *  The Composite Threat Graph had odd timescales for Year. Oops, we
+     fixed that and have found an improved way to draw lines. The team
+     has migrated from dots and crayons to true drafting tools; so proud
+     of them *<wipes tears away>*.

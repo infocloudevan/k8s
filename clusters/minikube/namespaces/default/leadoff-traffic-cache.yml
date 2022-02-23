@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: leadoff-traffic-cache
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: leadoff-traffic-cache
+  template:
+    metadata:
+      annotations:
+      labels:
+        app: leadoff-traffic-cache
+        prom: monitor 
+    spec:
+      containers:
+      - args:
+        - /hyperdark
+        - --log.verbosity=10
+        - leadoff
+        - traffic
+        - cache
+        env:
+        - name: HYPERDARK_KAFKA_ENDPOINTS
+          valueFrom: 
+            configMapKeyRef:
+              name: endpoints
+              key: kafka-cluster
+        - name: HYPERDARK_CACHE_ENDPOINT
+          valueFrom: 
+            configMapKeyRef:
+              name: endpoints
+              key: redis-server
+        image: hyperdark
+        ports:
+        - containerPort: 9102
+          name: metrics
+          protocol: TCP        
+        imagePullPolicy: Never
+        name: leadoff
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: FallbackToLogsOnError

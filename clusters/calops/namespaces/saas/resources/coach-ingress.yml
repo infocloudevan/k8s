@@ -1,0 +1,38 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  annotations:
+    ingress.kubernetes.io/client-body-buffer-size: 1024k
+    kubernetes.io/ingress.class: nginx-internal
+  name: coach-internal
+spec:
+  rules:
+  - host: field.darkcubed.calops
+    http:
+      paths:
+      - backend:
+          serviceName: coach
+          servicePort: 80
+        path: /
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  annotations:
+    ingress.kubernetes.io/rewrite-target: /
+    kubernetes.io/ingress.class: nginx
+    kubernetes.io/tls-acme: "true"
+  name: coach
+spec:
+  rules:
+  - host: field.a.darkcubed.net
+    http:
+      paths:
+      - backend:
+          serviceName: coach
+          servicePort: 80
+        path: /
+  tls:
+  - hosts:
+    - field.a.darkcubed.net
+    secretName: coach-ingress-tls

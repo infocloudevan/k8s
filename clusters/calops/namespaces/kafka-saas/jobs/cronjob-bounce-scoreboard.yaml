@@ -1,0 +1,49 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"batch/v1beta1","kind":"CronJob","metadata":{"annotations":{},"name":"bounce-scoreboard","namespace":"kafka-saas"},"spec":{"concurrencyPolicy":"Forbid","failedJobsHistoryLimit":1,"jobTemplate":{"spec":{"template":{"metadata":{"labels":{"run":"bounce-scoreboard"}},"spec":{"containers":[{"args":["/bin/bash","-c","/kubectl patch deployment scoreboard -p \"{\\\"spec\\\":{\\\"template\\\":{\\\"metadata\\\":{\\\"annotations\\\":{\\\"date\\\":\\\"$(date +%s)\\\"}}}}}\" --dry-run -o json"],"image":"activeshadow/kubectl:v1.12.7","imagePullPolicy":"IfNotPresent","name":"kubectl"}],"restartPolicy":"OnFailure","serviceAccount":"kubectl"}}}},"schedule":"0 */6 * * *","successfulJobsHistoryLimit":1}}
+  creationTimestamp: 2019-11-06T19:26:12Z
+  name: bounce-scoreboard
+  namespace: kafka-saas
+  resourceVersion: "225739411"
+  selfLink: /apis/batch/v1beta1/namespaces/kafka-saas/cronjobs/bounce-scoreboard
+  uid: 4aee059f-00cb-11ea-bc71-0a9e36e5582e
+spec:
+  concurrencyPolicy: Forbid
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    metadata:
+      creationTimestamp: null
+    spec:
+      template:
+        metadata:
+          creationTimestamp: null
+          labels:
+            run: bounce-scoreboard
+        spec:
+          containers:
+          - args:
+            - /bin/bash
+            - -c
+            - /kubectl patch deployment scoreboard -p "{\"spec\":{\"template\":{\"metadata\":{\"annotations\":{\"date\":\"$(date
+              +%s)\"}}}}}"
+            image: activeshadow/kubectl:v1.12.7
+            imagePullPolicy: IfNotPresent
+            name: kubectl
+            resources: {}
+            terminationMessagePath: /dev/termination-log
+            terminationMessagePolicy: File
+          dnsPolicy: ClusterFirst
+          restartPolicy: OnFailure
+          schedulerName: default-scheduler
+          securityContext: {}
+          serviceAccount: kubectl
+          serviceAccountName: kubectl
+          terminationGracePeriodSeconds: 30
+  schedule: 0 * * * *
+  successfulJobsHistoryLimit: 1
+  suspend: false
+status:
+  lastScheduleTime: 2020-09-04T15:00:00Z

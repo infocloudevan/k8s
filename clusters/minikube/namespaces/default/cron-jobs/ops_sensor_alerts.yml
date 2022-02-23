@@ -1,0 +1,66 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: ops-sensor-alerts
+spec:
+  schedule: 2/5 * * * *
+  concurrencyPolicy: Forbid
+  suspend: true
+  jobTemplate:
+    metadata:
+      creationTimestamp: null
+    spec:
+      template:
+        metadata:
+          creationTimestamp: null
+        spec:
+          containers:
+            - name: ops-sensor-alerts
+              image: hyperdark
+              args:
+                - /hyperdark
+                - '--log.verbosity=5'
+                - admin
+                - check_for_alerts
+              env:
+              - name: APP_NOTIFY_SLACK
+                valueFrom:
+                  configMapKeyRef:
+                    name: d3-ops
+                    key: slack-webhook
+              - name: APP_NOTIFY_EMAILS
+                valueFrom:
+                  configMapKeyRef:
+                    name: d3-ops
+                    key: alert-notify-emails
+              - name: APP_NOTIFY_FROM_EMAILS
+                valueFrom:
+                  configMapKeyRef:
+                    name: d3-ops
+                    key: alert-from-email
+              - name: HYPERDARK_KAFKA_ENDPOINTS
+                valueFrom:
+                  configMapKeyRef:
+                    name: endpoints
+                    key: kafka-cluster
+              - name: HYPERDARK_CACHE_ENDPOINT
+                valueFrom:
+                  configMapKeyRef:
+                    name: endpoints
+                    key: redis-server
+              - name: HYPERDARK_DB_ENDPOINT
+                valueFrom:
+                  configMapKeyRef:
+                    name: endpoints
+                    key: postgres-cluster
+              resources: {}
+              terminationMessagePath: /dev/termination-log
+              terminationMessagePolicy: File
+              imagePullPolicy: Never
+          restartPolicy: OnFailure
+          terminationGracePeriodSeconds: 30
+          dnsPolicy: ClusterFirst
+          securityContext: {}
+          schedulerName: default-scheduler
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 1

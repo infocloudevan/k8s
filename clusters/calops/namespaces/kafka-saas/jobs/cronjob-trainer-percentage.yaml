@@ -1,0 +1,67 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"batch/v1beta1","kind":"CronJob","metadata":{"annotations":{},"name":"trainer-percentage","namespace":"kafka-saas"},"spec":{"concurrencyPolicy":"Forbid","failedJobsHistoryLimit":1,"jobTemplate":{"spec":{"template":{"spec":{"containers":[{"args":["/trainer","--log.verbosity=10","percentage"],"env":[{"name":"TRAINER_PERCENTAGE_CACHE_ENDPOINT","valueFrom":{"configMapKeyRef":{"key":"redis-server","name":"endpoints"}}},{"name":"TRAINER_PERCENTAGE_CACHE_CLUSTER_ENDPOINTS","valueFrom":{"configMapKeyRef":{"key":"redis-cluster","name":"endpoints"}}},{"name":"TRAINER_PERCENTAGE_DB_ENDPOINT","valueFrom":{"secretKeyRef":{"key":"postgres-cluster","name":"endpoints"}}}],"image":"078306444420.dkr.ecr.us-east-2.amazonaws.com/darkcubed/trainer:test","imagePullPolicy":"Always","name":"trainer","terminationMessagePath":"/dev/termination-log","terminationMessagePolicy":"FallbackToLogsOnError"}],"restartPolicy":"Never"}}}},"schedule":"0/5 * * * *","successfulJobsHistoryLimit":1}}
+  creationTimestamp: 2019-08-26T07:56:18Z
+  name: trainer-percentage
+  namespace: kafka-saas
+  resourceVersion: "225745434"
+  selfLink: /apis/batch/v1beta1/namespaces/kafka-saas/cronjobs/trainer-percentage
+  uid: fc5002f9-c7d6-11e9-bc71-0a9e36e5582e
+spec:
+  concurrencyPolicy: Forbid
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    metadata:
+      creationTimestamp: null
+    spec:
+      template:
+        metadata:
+          creationTimestamp: null
+        spec:
+          containers:
+          - args:
+            - /trainer
+            - --log.verbosity=10
+            - percentage
+            env:
+            - name: TRAINER_PERCENTAGE_CACHE_ENDPOINT
+              valueFrom:
+                configMapKeyRef:
+                  key: redis-server
+                  name: endpoints
+            - name: TRAINER_PERCENTAGE_CACHE_CLUSTER_ENDPOINTS
+              valueFrom:
+                configMapKeyRef:
+                  key: redis-cluster
+                  name: endpoints
+            - name: TRAINER_PERCENTAGE_DB_ENDPOINT
+              valueFrom:
+                secretKeyRef:
+                  key: postgres-cluster
+                  name: endpoints
+            image: 078306444420.dkr.ecr.us-east-2.amazonaws.com/darkcubed/trainer:test
+            imagePullPolicy: Always
+            name: trainer
+            resources: {}
+            terminationMessagePath: /dev/termination-log
+            terminationMessagePolicy: FallbackToLogsOnError
+          dnsPolicy: ClusterFirst
+          restartPolicy: Never
+          schedulerName: default-scheduler
+          securityContext: {}
+          terminationGracePeriodSeconds: 30
+  schedule: 0/5 * * * *
+  successfulJobsHistoryLimit: 1
+  suspend: false
+status:
+  active:
+  - apiVersion: batch/v1
+    kind: Job
+    name: trainer-percentage-1599232500
+    namespace: kafka-saas
+    resourceVersion: "225745430"
+    uid: 6a747f44-eec1-11ea-8d6d-0a9e36e5582e
+  lastScheduleTime: 2020-09-04T15:15:00Z

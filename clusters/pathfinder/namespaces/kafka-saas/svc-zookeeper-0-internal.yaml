@@ -1,0 +1,41 @@
+apiVersion: v1
+kind: Service
+metadata:
+  creationTimestamp: "2019-08-19T22:02:23Z"
+  labels:
+    namespace: kafka-saas
+    type: zookeeper
+  name: zookeeper-0-internal
+  namespace: kafka-saas
+  resourceVersion: "6027122"
+  selfLink: /api/v1/namespaces/kafka-saas/services/zookeeper-0-internal
+  uid: 061966fb-c2cd-11e9-845f-0a9658482414
+spec:
+  clusterIP: 100.69.19.41
+  ports:
+  - name: leader-election
+    port: 3888
+    protocol: TCP
+    targetPort: 3888
+  - name: peer
+    port: 2888
+    protocol: TCP
+    targetPort: 2888
+  - name: client
+    port: 2181
+    protocol: TCP
+    targetPort: 2181
+  - name: jmx
+    port: 7203
+    protocol: TCP
+    targetPort: 7203
+  - name: jolokia
+    port: 7777
+    protocol: TCP
+    targetPort: 7777
+  selector:
+    statefulset.kubernetes.io/pod-name: zookeeper-0
+  sessionAffinity: None
+  type: ClusterIP
+status:
+  loadBalancer: {}

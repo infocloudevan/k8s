@@ -1,0 +1,51 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: scorecard
+spec:
+  replicas: 1
+  template:
+    metadata:
+      annotations:
+        prometheus.io/scrape: "true"
+      labels:
+        app: scorecard
+    spec:
+      containers:
+      - args:
+        - scorecard
+        - --listen-endpoint=0.0.0.0:8080
+        - --scorekeeper-endpoint=scorekeeper:8080
+        - --timescaledb-endpoint=postgres://dark3@timescale:5432/dark3?sslmode=disable
+        - --keystore-provider=memcached
+        - --keystore-endpoint=test.jqj9j7.0001.use2.cache.amazonaws.com:11211
+        - --keystore-endpoint=test.jqj9j7.0002.use2.cache.amazonaws.com:11211
+        - --keystore-endpoint=test.jqj9j7.0003.use2.cache.amazonaws.com:11211
+        - --memcached-max-idle-conns=100
+        image: 078306444420.dkr.ecr.us-east-2.amazonaws.com/darkcubed/hyperdark:v25.3
+        imagePullPolicy: IfNotPresent
+        name: scorecard
+        ports:
+        - containerPort: 8080
+          name: grpc
+          protocol: TCP
+        - containerPort: 9102
+          name: metrics
+          protocol: TCP
+        resources:
+          requests:
+            cpu: 500m
+            memory: 64Mi
+        terminationMessagePolicy: FallbackToLogsOnError
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: scorecard
+spec:
+  ports:
+  - name: grpc
+    port: 8080
+    protocol: TCP
+  selector:
+    app: scorecard

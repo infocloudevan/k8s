@@ -1,0 +1,24 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: force-remove-images
+  namespace: colo
+spec:
+  template:
+    metadata:
+      name: force-remove-images
+    spec:
+      nodeSelector:
+        appliance: nannuk
+      containers:
+      - name: docker
+        image: docker
+        args: ["docker", "-f", "rmi", "$(docker images | grep -E 'localstash|bro' | grep v23.0)"]
+        volumeMounts:
+        - name: docker-sock
+          mountPath: /var/run/docker.sock
+      restartPolicy: Never
+      volumes:
+      - name: docker-sock
+        hostPath:
+          path: /var/run/docker.sock

@@ -1,0 +1,18 @@
+apiVersion: v1
+data:
+  blackbox-server: scorecard.prod:8080
+  es-cluster: https://cluster-es-http.elastic:9200
+  kafka-cluster: b-1.calops-pipeline.ku65zi.c4.kafka.us-east-2.amazonaws.com:9092,b-2.calops-pipeline.ku65zi.c4.kafka.us-east-2.amazonaws.com:9092,b-5.calops-pipeline.ku65zi.c4.kafka.us-east-2.amazonaws.com:9092
+  redis-cluster: saas-redis.jqj9j7.clustercfg.use2.cache.amazonaws.com:6379
+  redis-server: calops-redis.jqj9j7.0001.use2.cache.amazonaws.com:6379
+kind: ConfigMap
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"v1","data":{"blackbox-server":"scorecard.prod:8080","es-cluster":"https://cluster-es-http.kube-system:9200","kafka-cluster":"b-1.calops-pipeline.ku65zi.c4.kafka.us-east-2.amazonaws.com:9092,b-2.calops-pipeline.ku65zi.c4.kafka.us-east-2.amazonaws.com:9092,b-5.calops-pipeline.ku65zi.c4.kafka.us-east-2.amazonaws.com:9092","redis-cluster":"saas-redis.jqj9j7.clustercfg.use2.cache.amazonaws.com:6379","redis-server":"calops-redis.jqj9j7.0001.use2.cache.amazonaws.com:6379"},"kind":"ConfigMap","metadata":{"annotations":{},"creationTimestamp":"2019-08-16T22:14:48Z","name":"endpoints","namespace":"kafka-saas","selfLink":"/api/v1/namespaces/kafka-saas/configmaps/endpoints","uid":"42d9b45a-c073-11e9-bc71-0a9e36e5582e"}}
+  creationTimestamp: 2019-08-16T22:14:48Z
+  name: endpoints
+  namespace: kafka-saas
+  resourceVersion: "159020524"
+  selfLink: /api/v1/namespaces/kafka-saas/configmaps/endpoints
+  uid: 42d9b45a-c073-11e9-bc71-0a9e36e5582e

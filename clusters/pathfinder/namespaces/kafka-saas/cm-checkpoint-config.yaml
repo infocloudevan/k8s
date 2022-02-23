@@ -1,0 +1,30 @@
+apiVersion: v1
+data:
+  checkpoint.yml: |
+    listeners:
+    - port: 30000
+      uuid: 9cc49b3b-a9b6-4066-b0ea-eb698bdd0b95
+      forwarders:
+      - origin: 128.18.220.6
+        port: 40050
+        uuid: 0000bcf5-5907-5ab8-3be2-580a33f111f1
+      - origin: 128.18.220.5
+        port: 40050
+        uuid: 0000bcf5-5907-5ab8-3be2-580a33f111f1
+      - origin: 128.18.222.8
+        port: 40051
+        uuid: 0000802f-0ef6-2a9a-41eb-dac86aafe00a
+      - origin: 128.18.222.9
+        port: 40051
+        uuid: 0000802f-0ef6-2a9a-41eb-dac86aafe00a
+      - origin: 128.18.219.48
+        port: 40064
+        uuid: 0000f743-0e2b-e795-5122-dc67b97fe0c4
+kind: ConfigMap
+metadata:
+  creationTimestamp: "2020-05-06T19:41:53Z"
+  name: checkpoint-config
+  namespace: kafka-saas
+  resourceVersion: "110379481"
+  selfLink: /api/v1/namespaces/kafka-saas/configmaps/checkpoint-config
+  uid: a332bdbe-8fd1-11ea-845f-0a9658482414

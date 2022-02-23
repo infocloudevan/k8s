@@ -1,0 +1,38 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: {{APPLIANCE}}-sportscast
+  namespace: {{NAMESPACE}}
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        name: {{APPLIANCE}}-sportscast
+    spec:
+      nodeSelector:
+        appliance: {{APPLIANCE}}
+      imagePullSecrets:
+        - name: quay.io
+      hostNetwork: true
+      containers:
+        - name: sportscast
+          image: quay.io/darkcubed/hyperdark:v15.1
+          imagePullPolicy: Always
+          args:
+            - --log-level=debug
+            - sportscast
+          volumeMounts:
+            - name: certs
+              mountPath: /var/certs
+              readOnly: true
+            - name: docker
+              mountPath: /tmp/docker.sock
+              readOnly: true
+      volumes:
+        - name: docker
+          hostPath:
+            path: /var/run/docker.sock
+        - name: certs
+          secret:
+            secretName: d3oc-cert

@@ -1,0 +1,32 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: coach-whitelister
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: coach-whitelister
+        prom: monitor
+    spec:
+      containers:
+      - args:
+        - /coach
+        - --log.verbosity=10
+        - whitelister
+        env:
+        - name: COACH_WHITELISTER_KAFKA_ENDPOINTS
+          valueFrom: 
+            configMapKeyRef:
+              name: endpoints
+              key: kafka-cluster
+        image: quay.io/darkcubed/coach:21078be
+        imagePullPolicy: Always
+        name: coach
+        ports:
+        - name: metrics
+          containerPort: 9102
+          protocol: TCP
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: FallbackToLogsOnError

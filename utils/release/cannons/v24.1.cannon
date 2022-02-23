@@ -1,0 +1,4 @@
+# Add term to be replaced by term separated by a tab.
+# Example: v1.0<tab>v2.0
+
+uidb:v24.0	uidb:v24.1

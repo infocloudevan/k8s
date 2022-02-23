@@ -1,0 +1,49 @@
+apiVersion: v1
+data:
+  burrow.toml: |
+    [zookeeper]
+    servers=[ "172.20.225.70:2181", "172.20.203.138:2181", "172.20.171.17:2181" ]
+    timeout=6
+    root-path="/burrow"
+
+    [cluster.local]
+    class-name="kafka"
+    servers=[ "b-5.calops-pipeline.ku65zi.c4.kafka.us-east-2.amazonaws.com:9092", "b-6.calops-pipeline.ku65zi.c4.kafka.us-east-2.amazonaws.com:9092", "b-3.calops-pipeline.ku65zi.c4.kafka.us-east-2.amazonaws.com:9092" ]
+    client-profile="profile_dark3"
+    topic-refresh=60
+    offset-refresh=30
+
+    [consumer.local]
+    class-name="kafka"
+    cluster="local"
+    servers=[ "b-5.calops-pipeline.ku65zi.c4.kafka.us-east-2.amazonaws.com:9092", "b-6.calops-pipeline.ku65zi.c4.kafka.us-east-2.amazonaws.com:9092", "b-3.calops-pipeline.ku65zi.c4.kafka.us-east-2.amazonaws.com:9092" ]
+    client-profile="profile_dark3"
+    group-blacklist="^(burrow-local).*$"
+    group-whitelist=""
+
+    [consumer.local_zk]
+    class-name="kafka_zk"
+    cluster="local"
+    servers=[ "172.20.225.70:2181", "172.20.203.138:2181", "172.20.171.17:2181" ]
+    zookeeper-path="/local"
+    zookeeper-timeout=30
+    group-blacklist="^(burrow-local).*$"
+    group-whitelist=""
+
+    [httpserver.default]
+    address=":8000"
+
+    [client-profile.profile_dark3]
+    kafka-version="2.0.1"
+    client-id="burrow-dark3"
+kind: ConfigMap
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"v1","data":{"burrow.toml":"[zookeeper]\nservers=[ \"172.20.225.70:2181\", \"172.20.203.138:2181\", \"172.20.171.17:2181\" ]\ntimeout=6\nroot-path=\"/burrow\"\n\n[cluster.local]\nclass-name=\"kafka\"\nservers=[ \"b-5.calops-pipeline.ku65zi.c4.kafka.us-east-2.amazonaws.com:9092\", \"b-6.calops-pipeline.ku65zi.c4.kafka.us-east-2.amazonaws.com:9092\", \"b-3.calops-pipeline.ku65zi.c4.kafka.us-east-2.amazonaws.com:9092\" ]\nclient-profile=\"profile_dark3\"\ntopic-refresh=60\noffset-refresh=30\n\n[consumer.local]\nclass-name=\"kafka\"\ncluster=\"local\"\nservers=[ \"b-5.calops-pipeline.ku65zi.c4.kafka.us-east-2.amazonaws.com:9092\", \"b-6.calops-pipeline.ku65zi.c4.kafka.us-east-2.amazonaws.com:9092\", \"b-3.calops-pipeline.ku65zi.c4.kafka.us-east-2.amazonaws.com:9092\" ]\nclient-profile=\"profile_dark3\"\ngroup-blacklist=\"^(burrow-local).*$\"\ngroup-whitelist=\"\"\n\n[consumer.local_zk]\nclass-name=\"kafka_zk\"\ncluster=\"local\"\nservers=[ \"172.20.225.70:2181\", \"172.20.203.138:2181\", \"172.20.171.17:2181\" ]\nzookeeper-path=\"/local\"\nzookeeper-timeout=30\ngroup-blacklist=\"^(burrow-local).*$\"\ngroup-whitelist=\"\"\n\n[httpserver.default]\naddress=\":8000\"\n\n[client-profile.profile_dark3]\nkafka-version=\"2.0.1\"\nclient-id=\"burrow-dark3\"\n"},"kind":"ConfigMap","metadata":{"annotations":{},"name":"burrow","namespace":"kafka-saas"}}
+  creationTimestamp: 2019-09-12T21:34:58Z
+  name: burrow
+  namespace: kafka-saas
+  resourceVersion: "46118032"
+  selfLink: /api/v1/namespaces/kafka-saas/configmaps/burrow
+  uid: 2b96f2f4-d5a5-11e9-b7e4-02c6bb02f104

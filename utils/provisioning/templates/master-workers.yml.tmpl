@@ -1,0 +1,31 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: {{APPLIANCE}}-workers
+  namespace: {{NAMESPACE}}
+spec:
+  replicas: 0
+  template:
+    metadata:
+      labels:
+        app: {{APPLIANCE}}-workers
+    spec:
+      nodeSelector:
+        appliance: {{APPLIANCE}}
+      imagePullSecrets:
+        - name: quay.io
+      hostNetwork: true
+      containers:
+        - name: lineup
+          image: quay.io/darkcubed/hyperdark:v24.0
+          imagePullPolicy: IfNotPresent
+          args:
+            - --log-level=debug
+            - lineup
+            - --blackbox=http://api.prod
+            - --pubsub-provider=beanstalk
+            - --pubsub-endpoint=127.0.0.1:11300
+            - --longpoll=https://localhost
+            - --max-db-open=75
+            - --max-db-idle=5
+            - --num-workers=1000

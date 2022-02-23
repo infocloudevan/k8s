@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: d3oc-statistician-sim
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: d3oc-statistician-sim
+  template:
+    metadata:
+      labels:
+        app: d3oc-statistician-sim
+    spec:
+      containers:
+        - args:
+            - /hyperdark
+            - --log.verbosity=10
+            - d3oc
+            - statistician-sim
+            - --keystore.provider=redis
+            - --keystore.endpoint=redis-master.default.svc:6379
+          env:
+            - name: D3OC_BEANSTALKD_SERVER
+              valueFrom:
+                configMapKeyRef:
+                  name: endpoints
+                  key: d3oc-beanstalkd
+            - name: D3OC_DB_ENDPOINT
+              valueFrom:
+                configMapKeyRef:
+                  name: endpoints
+                  key: d3oc-db
+          image: hyperdark
+          imagePullPolicy: Never
+          name: d3oc-statistician-sim
+          resources:
+            requests:
+              memory: "32Mi"
+              cpu: "50m"
+            limits:
+              memory: "64Mi"
+              cpu: "50m"
+          ports:
+            - containerPort: 8080
+              name: grpc
+              protocol: TCP
+            - containerPort: 9102
+              name: metrics
+              protocol: TCP
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: FallbackToLogsOnError

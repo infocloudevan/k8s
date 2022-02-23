@@ -1,0 +1,43 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: leadoff-threat-db
+spec:
+  replicas: 1
+  template:
+    metadata:
+      annotations:
+      labels:
+        app: leadoff-threat-db
+        prom: monitor
+    spec:
+      containers:
+      - args:
+        - /leadoff
+        - --log.verbosity=10
+        - threat-db
+        env:
+        - name: LEADOFF_THREAT_DB_KAFKA_ENDPOINTS
+          valueFrom: 
+            configMapKeyRef:
+              name: endpoints
+              key: kafka-cluster
+        - name: LEADOFF_THREAT_DB_CACHE_ENDPOINT
+          valueFrom: 
+            configMapKeyRef:
+              name: endpoints
+              key: redis-server
+        - name: LEADOFF_THREAT_DB_DB_ENDPOINT
+          valueFrom: 
+            configMapKeyRef:
+              name: endpoints
+              key: postgres-cluster
+        image: quay.io/darkcubed/leadoff:release-v1.0_alpha-3dc9aba
+        imagePullPolicy: Always
+        name: leadoff
+        ports:
+        - containerPort: 9102
+          name: metrics
+          protocol: TCP
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: FallbackToLogsOnError

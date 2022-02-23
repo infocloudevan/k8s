@@ -1,0 +1,50 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: metrics-scripts
+data:
+  aggregator.sh: |
+    while read -r s m; do
+      echo "INSERT INTO metrics (account_id, sensor_id, metric_type, metric_value) SELECT account_id, id, 'syslog logs', $m FROM sensors WHERE uuid = '$s';" >> /tmp/aggregator.sql
+    done < <(curl "http://prometheus-operated.saas/api/v1/query?query=sum+without(instance)(increase(catcher_logs_per_sensor[24h]))" | jq -c '.data.result[]' | jq -r '(.metric.sensor + " " + .value[1])')
+
+    while read -r s m; do
+      echo "INSERT INTO metrics (account_id, sensor_id, metric_type, metric_value) SELECT account_id, id, 'threat events', $m FROM sensors WHERE uuid = '$s';" >> /tmp/aggregator.sql
+    done < <(curl "http://prometheus-operated.saas/api/v1/query?query=sum+without(instance)(increase(coach_events_per_sensor[24h]))" | jq -c '.data.result[]' | jq -r '(.metric.sensor + " " + .value[1])')
+
+    while read -r s m; do
+      echo "INSERT INTO metrics (account_id, sensor_id, metric_type, metric_value) SELECT account_id, id, 'threat pipelined events', $m FROM sensors WHERE uuid = '$s';" >> /tmp/aggregator.sql
+    done < <(curl "http://prometheus-operated.saas/api/v1/query?query=sum+without(instance)(increase(coach_pipelined_events_per_sensor[24h]))" | jq -c '.data.result[]' | jq -r '(.metric.sensor + " " + .value[1])')
+
+    psql postgres://dark3:Qv8CYJfKDYR7PNed@saas-testing.cmfxlqcsk74c.us-east-2.rds.amazonaws.com:5432/dark3?sslmode=disable < /tmp/aggregator.sql
+---
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: metrics
+spec:
+  concurrencyPolicy: Forbid
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - args:
+            - bash
+            - /scripts/aggregator.sh
+            image: activeshadow/psql-cli
+            imagePullPolicy: IfNotPresent
+            name: metrics
+            terminationMessagePolicy: FallbackToLogsOnError
+            volumeMounts:
+            - mountPath: /scripts
+              name: scripts
+          restartPolicy: OnFailure
+          volumes:
+          - configMap:
+              name: metrics-scripts
+            name: scripts
+  # every night at midnight
+  schedule: 0 0 * * *
+  successfulJobsHistoryLimit: 1

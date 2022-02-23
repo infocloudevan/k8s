@@ -1,0 +1,73 @@
+apiVersion: v1
+data:
+  archive-traffic.sh: "#!/bin/bash\n\nEARLIEST_GOOD=20201101\nJOB_UUID='3493397c-51d5-11eb-8807-bbbb61aa3bb2'\nREPORT_NAME='bad_index_sensors'\nRETAIN_DAYS=61\n[
+    -z \"${DB_ENDPOINT}\" ] && DB_ENDPOINT=\"\"\n[ -z \"${ES_ENDPOINT}\" ] && ES_ENDPOINT=\"\"\n[
+    -z \"${ES_CREDENTIALS}\" ] && ES_CREDENTIALS=\"\"\nJOB_ID=\"\"\nBAD_INDEX_SENSORS=\"\"\nWORKING_DIR=\"\"\n\nOPTSPEC=\":-:\"\nARGS=\"$@\"\nwhile
+    getopts \"${OPTSPEC}\" OPT; do\n   case \"${OPT}\" in\n      -)\n         case
+    \"${OPTARG}\" in\n            retain_days)\n               RETAIN_DAYS=\"${!OPTIND}\"\n
+    \              OPTIND=$(( ${OPTIND} + 1 ))\n               ;;\n            retain_days=*)\n
+    \              RETAIN_DAYS=\"${OPTARG#*=}\"\n               ;;\n            pg_url)\n
+    \              DB_ENDPOINT=\"${!OPTIND}\"\n               OPTIND=$(( ${OPTIND}
+    + 1 ))\n               ;;\n            pg_url=*)\n               DB_ENDPOINT=\"${OPTARG#*=}\"\n
+    \              ;;\n            es_url)\n               ES_ENDPOINT=\"${!OPTIND}\"\n
+    \              OPTIND=$(( ${OPTIND} + 1 ))\n               ;;\n            es_url=*)\n
+    \              ES_ENDPOINT=\"${OPTARG#*=}\"\n               ;;\n            es_creds)\n
+    \              ES_CREDENTIALS=\"${!OPTIND}\"\n               OPTIND=$(( ${OPTIND}
+    + 1 ))\n               ;;\n            es_creds=*)\n               ES_CREDENTIALS=\"${OPTARG#*=}\"\n
+    \              ;;\n         esac\n         ;;\n   esac\ndone\nshift $((OPTIND-1))\n\nlog()
+    {\n   echo \"$(date +%Y-%m-%d_%H:%M:%S) [ $1 ] - $2\"\n}\ndebug() {\n   log \"DEBUG\"
+    \"$1\"\n}\ninfo() {\n   log \"INFO\" \"$1\"\n}\nerror() {\n   log \"ERROR\" \"$1\"\n}\nextract_date()
+    {\n   echo \"$1\" | cut -c9- | tr -d '-'\n}\nsend_report() {\n   BAD_INDEX_SENSORS=\"${BAD_INDEX_SENSORS::-1}]}\"\n
+    \  _RES=$(psql -Aqt -c \"INSERT INTO batch.job_reports (job_uuid, report_name,
+    report_content) VALUES('${JOB_UUID}','${REPORT_NAME}','${BAD_INDEX_SENSORS}');\")
+    && info \"Sending report: ${_RES}\"\n}\ninit() {\n   info \"Starting job.\"\n
+    \  [[ -z \"${DB_ENDPOINT}\" || -z \"${ES_ENDPOINT}\" || -z \"${ES_CREDENTIALS}\"
+    ]] && error \"Missing one or more required environment variables.  Exiting.\"
+    && exit\n   PG_PARTS_1=( $(echo ${DB_ENDPOINT#postgres://} | tr '@' ' ' | awk
+    '{print $1}' | tr ':' ' ') )\n   export PGUSER=${PG_PARTS_1[0]}\n   export PGPASSWORD=${PG_PARTS_1[1]}\n
+    \  PG_PARTS_2=( $(echo ${DB_ENDPOINT#postgres://} | tr '@' ' ' | awk '{print $2}'
+    | tr '/' ' ' | awk '{print $1}' | tr ':' ' ') )\n   export PGHOST=${PG_PARTS_2[0]}\n
+    \  export PGPORT=${PG_PARTS_2[1]}\n   export PGDATABASE=$(echo ${DB_ENDPOINT#postgres://}
+    | tr '/' ' ' | awk '{print $2}') \n   JOB_MSG=\"{\\\"retain_days\\\":\\\"${RETAIN_DAYS}\\\",\\\"earliest_good\\\":\\\"${EARLIEST_GOOD}\\\",\\\"report_name\\\":\\\"${REPORT_NAME}\\\"}\"\n
+    \  JOB_ID=$(psql -Aqt -c \"INSERT INTO batch.job_control (job_uuid, job_msg, start_ts)
+    VALUES('${JOB_UUID}','${JOB_MSG}',now()) RETURNING job_id;\") && info \"Initializing
+    job control. ID: ${JOB_ID}\"\n   BAD_INDEX_SENSORS=\"{\\\"indices\\\":[ \"\n   WORKING_DIR=$(mktemp
+    -d /tmp/archive.XXXXXXXXXX)\n}\ncleanup() {\n   send_report\n   _RES=$(psql -c
+    \"UPDATE batch.job_control SET status = '$1', complete_ts = now() WHERE job_id
+    = ${JOB_ID};\") && info \"Finalizing job control: ${_RES}\"\n   rm -rf ${WORKING_DIR}\n
+    \  info \"Finished job.\"\n}\nabort() {\n   log \"ERROR\" \"$1\" && cleanup \"ERROR\"
+    && exit\n}\nreport_bad() {\n   _RES=$(curl -s -k -u \"${ES_CREDENTIALS}\" -H'Content-Type:
+    application/json' -XGET \"${ES_ENDPOINT}/$1/_search\" -d '{ \"size\" : 0, \"query\"
+    : { \"match_all\" : {} }, \"aggs\" : { \"sensors\" : { \"terms\" : { \"field\"
+    : \"sensor\" } } } }')\n   SENSORS=( $(echo \"${_RES}\" | jq -r '.aggregations.sensors.buckets[].key')
+    )\n   BAD_INDEX_SENSORS=\"${BAD_INDEX_SENSORS}{\\\"index\\\":\\\"$1\\\",\\\"snapshot\\\":\\\"$2\\\",\\\"sensors\\\":[\"\n
+    \  (( s=0 ))\n   while [[ $s -lt ${#SENSORS[@]} ]]; do\n      BAD_INDEX_SENSORS=\"${BAD_INDEX_SENSORS}\\\"${SENSORS[$s]}\\\",\"\n
+    \     (( s++ ))\n      \n   done\n   BAD_INDEX_SENSORS=\"${BAD_INDEX_SENSORS::-1}]},\"\n}\n\ninit\ncurl
+    -s -k -u \"${ES_CREDENTIALS}\" -XGET \"${ES_ENDPOINT}/_cat/indices/traffic-*?h=index&s=index:desc\"
+    > ${WORKING_DIR}/indices\nfor i in $(cat ${WORKING_DIR}/indices); do v=$(extract_date
+    $i); echo \"$i $v\" >> ${WORKING_DIR}/to_compare; done\nARCHIVE_START=\"$(date
+    -d 'now - '${RETAIN_DAYS}' days' +%Y%m%d)\"\ninfo \"Need to archive indexes starting
+    with ${ARCHIVE_START}\"\nTO_ARCHIVE=( $(awk '$2<='\"${ARCHIVE_START}\"'{print
+    $1}' ${WORKING_DIR}/to_compare) )\ninfo \"${#TO_ARCHIVE[@]} indices to be archived\"\nSS_TODAY=$(date
+    +%Y.%m.%d)\n(( i=0 ))\nwhile [ $i -lt ${#TO_ARCHIVE[@]} ]; do\n   info \"Index:
+    ${TO_ARCHIVE[$i]}\"\n   SNAPSHOT=\"${TO_ARCHIVE[$i]}.${SS_TODAY}\"\n   [[ $(extract_date
+    ${TO_ARCHIVE[$i]}) -lt ${EARLIEST_GOOD} ]] && report_bad \"${TO_ARCHIVE[$i]}\"
+    \"${SNAPSHOT}\"\n   info \"Preparing to create snapshot: ${SNAPSHOT}\"\n   _RES=$(curl
+    -s -k -u \"${ES_CREDENTIALS}\" -H'Content-Type: application/json' -XPUT \"${ES_ENDPOINT}/_snapshot/old-indices/${SNAPSHOT}\"
+    -d '{ \"indices\" : \"'${TO_ARCHIVE[$i]}'\", \"ignore_unavailable\" : true, \"include_global_state\"
+    : true }')\n   [[ $(echo \"${_RES}\" | jq -r '.accepted') = 'true' ]] || abort
+    \"Issue requesting the snapshot: ${_RES}\"\n   _RES=$(curl -s -k -u \"${ES_CREDENTIALS}\"
+    -XGET \"${ES_ENDPOINT}/_snapshot/old-indices/${SNAPSHOT}\") && SS_STATUS=$(echo
+    \"${_RES}\" | jq -r '.snapshots[0].state')\n   while [[ ${SS_STATUS} != \"SUCCESS\"
+    ]]; do\n      info \"Status: ${SS_STATUS}\"\n      sleep 30\n      _RES=$(curl
+    -s -k -u \"${ES_CREDENTIALS}\" -XGET \"${ES_ENDPOINT}/_snapshot/old-indices/${SNAPSHOT}\")
+    && SS_STATUS=$(echo \"${_RES}\" | jq -r '.snapshots[0].state')\n   done\n   info
+    \"Finished creating snapshot: ${SNAPSHOT}\"\n   info \"Deleting index: ${TO_ARCHIVE[$i]}\"\n
+    \  _RES=$(curl -s -k -u \"${ES_CREDENTIALS}\" -XDELETE \"${ES_ENDPOINT}/${TO_ARCHIVE[$i]}\")\n
+    \  [[ $(echo \"${_RES}\" | jq -r '.acknowledged') = 'true' ]] && info \"Index
+    deleted.\" || error \"Issue deleting the index: ${_RES}\"\n   (( i++ ))\ndone\ncleanup
+    \"COMPLETED\"\n\n"
+kind: ConfigMap
+metadata:
+  name: job-scripts
+  namespace: batch

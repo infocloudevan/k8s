@@ -1,0 +1,38 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: leadoff-traffic-db
+spec:
+  replicas: 1
+  template:
+    metadata:
+      annotations:
+      labels:
+        app: leadoff-traffic-db
+        prom: monitor
+    spec:
+      containers:
+      - args:
+        - /leadoff
+        - --log.verbosity=10
+        - traffic-db
+        env:
+        - name: LEADOFF_TRAFFIC_DB_KAFKA_ENDPOINTS
+          valueFrom: 
+            configMapKeyRef:
+              name: endpoints
+              key: kafka-cluster
+        - name: LEADOFF_TRAFFIC_DB_DB_ENDPOINT
+          valueFrom: 
+            configMapKeyRef:
+              name: endpoints
+              key: postgres-cluster
+        image: quay.io/darkcubed/leadoff:release-v1.0_alpha-3dc9aba
+        imagePullPolicy: Always
+        name: leadoff
+        ports:
+        - name: metrics
+          containerPort: 9102
+          protocol: TCP
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: FallbackToLogsOnError

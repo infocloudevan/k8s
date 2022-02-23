@@ -1,0 +1,69 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: statistician
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: scorecard
+  template:
+    metadata:
+      labels:
+        app: statistician
+    spec:
+      containers:
+      - args:
+        - --env=prod
+        - --log-level=debug
+        - --statsd-endpoint=100.66.89.30
+        - worker
+        - --proddb=psql://d3postgresql:pSE8BH1IRIbiso41LX@d3oc.cmfxlqcsk74c.us-east-2.rds.amazonaws.com:5432/d3main
+        - --proddb-ro=d3oc.cmfxlqcsk74c.us-east-2.rds.amazonaws.com,d3oc.cmfxlqcsk74c.us-east-2.rds.amazonaws.com
+        - --beanstalkd-server=queue:11300
+        - --beanstalk-tube=estimate
+        - --elastic-cluster=https://vpc-d3oc-h6vsmavb2cmkqrkmps5lkdt3za.us-east-2.es.amazonaws.com
+        image: 078306444420.dkr.ecr.us-east-2.amazonaws.com/darkcubed/statistician:v25.3
+        imagePullPolicy: IfNotPresent
+        name: statistician
+        ports:
+        - containerPort: 9102
+          name: metrics
+          protocol: TCP
+        resources:
+          requests:
+            cpu: 10m
+            memory: 16Mi
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: FallbackToLogsOnError
+      - args:
+        - statistician
+        - --http-endpoint=0.0.0.0:80
+        - --keystore-provider=memcached
+        - --keystore-endpoint=d3oc.jqj9j7.0001.use2.cache.amazonaws.com:11211
+        - --keystore-endpoint=d3oc.jqj9j7.0002.use2.cache.amazonaws.com:11211
+        - --keystore-endpoint=d3oc.jqj9j7.0003.use2.cache.amazonaws.com:11211
+        image: 078306444420.dkr.ecr.us-east-2.amazonaws.com/darkcubed/hyperdark:v25.4
+        imagePullPolicy: IfNotPresent
+        name: sidecar
+        resources:
+          requests:
+            cpu: 10m
+            memory: 16Mi
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: FallbackToLogsOnError
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    prom: monitor
+  name: statistician
+spec:
+  ports:
+  - name: metrics
+    port: 9102
+    protocol: TCP
+    targetPort: 9102
+  selector:
+    app: statistician

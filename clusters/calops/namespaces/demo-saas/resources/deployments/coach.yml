@@ -1,0 +1,69 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  labels:
+    app: coach
+  name: coach
+  namespace: demo-saas
+spec:
+  replicas: 5
+  template:
+    metadata:
+      labels:
+        app: coach
+    spec:
+      containers:
+      - args:
+        - coach
+        - --http-endpoint=0.0.0.0:80
+        - --pubsub-provider=beanstalk
+        - --pubsub-endpoint=queue:11300
+        - --postgres=$(DB_URL)
+        - --redis=demo-saas-cache-redis-master:6379
+        - --max-accumulated-threats=500
+        - --accumulated-threats-duration=1m
+        - --run-scheduler=false
+        env:
+        - name: DB_URL
+          valueFrom:
+            secretKeyRef:
+              key: fullurl
+              name: saas-db-credentials
+        image: 078306444420.dkr.ecr.us-east-2.amazonaws.com/darkcubed/hyperdark:v25.4.3
+        imagePullPolicy: IfNotPresent
+        name: coach
+        ports:
+        - containerPort: 80
+          protocol: TCP
+        - containerPort: 9102
+          name: metrics
+          protocol: TCP
+        resources:
+          requests:
+            cpu: 30m
+            memory: 1Gi
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+      restartPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    prom: monitor
+  name: coach
+  namespace: demo-saas
+spec:
+  ports:
+  - name: http
+    port: 80
+    protocol: TCP
+    targetPort: 80
+  - name: metrics
+    port: 9102
+    protocol: TCP
+    targetPort: 9102
+  selector:
+    app: coach
+  sessionAffinity: None
+  type: ClusterIP

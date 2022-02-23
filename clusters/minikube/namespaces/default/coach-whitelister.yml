@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: coach-whitelister
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: coach-whitelister
+  template:
+    metadata:
+      labels:
+        app: coach-whitelister
+        prom: monitor
+    spec:
+      containers:
+      - args:
+        - /hyperdark
+        - --log.verbosity=10
+        - coach
+        - whitelist
+        - --app.threat.ratelimit.max=120
+        - --app.threat.ratelimit.window=1m
+        env:
+        - name: HYPERDARK_KAFKA_ENDPOINTS
+          valueFrom: 
+            configMapKeyRef:
+              name: endpoints
+              key: kafka-cluster
+        - name: HYPERDARK_CACHE_ENDPOINT
+          valueFrom: 
+            configMapKeyRef:
+              name: endpoints
+              key: redis-server
+        - name: HYPERDARK_DB_ENDPOINT
+          valueFrom: 
+            configMapKeyRef:
+              name: endpoints
+              key: postgres-cluster
+        image: hyperdark
+        imagePullPolicy: Never
+        name: coach
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: FallbackToLogsOnError

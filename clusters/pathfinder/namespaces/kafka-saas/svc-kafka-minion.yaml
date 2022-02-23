@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"v1","kind":"Service","metadata":{"annotations":{},"labels":{"prom":"monitor"},"name":"kafka-minion","namespace":"kafka-saas"},"spec":{"ports":[{"name":"metrics","port":8080,"protocol":"TCP"}],"selector":{"app":"kafka-minion"}}}
+  creationTimestamp: "2019-09-15T19:59:33Z"
+  labels:
+    prom: monitor
+  name: kafka-minion
+  namespace: kafka-saas
+  resourceVersion: "13702136"
+  selfLink: /api/v1/namespaces/kafka-saas/services/kafka-minion
+  uid: 567ecd56-d7f3-11e9-845f-0a9658482414
+spec:
+  clusterIP: 100.68.102.229
+  ports:
+  - name: metrics
+    port: 8080
+    protocol: TCP
+    targetPort: 8080
+  selector:
+    app: kafka-minion
+  sessionAffinity: None
+  type: ClusterIP
+status:
+  loadBalancer: {}

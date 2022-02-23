@@ -1,0 +1,27 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: get-cloud-{{APPLIANCE}}
+  namespace: {{NAMESPACE}}
+spec:
+  template:
+    metadata:
+      name: get-cloud-{{APPLIANCE}}
+    spec:
+      nodeSelector:
+        appliance: {{APPLIANCE}}
+      containers:
+        - name: get-cloud
+          image: busybox
+          command: ["cat", "/tmp/var/lib/coreos-install/user_data"]
+          env:
+            - name: REPORTER
+              value: stream
+          volumeMounts:
+            - name: get-cloud
+              mountPath: /tmp/var/lib/coreos-install
+      restartPolicy: Never
+      volumes:
+        - name: get-cloud
+          hostPath:
+            path: /var/lib/coreos-install       

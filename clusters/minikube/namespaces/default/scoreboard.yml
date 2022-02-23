@@ -1,0 +1,67 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: scoreboard
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: scoreboard
+  template:
+    metadata:
+      annotations:
+      labels:
+        app: scoreboard
+        prom: monitor
+    spec:
+      containers:
+      - args:
+        - /hyperdark
+        - --log.verbosity=10
+        - scoreboard
+        - --app.root-url=http://localhost:8080
+        env:
+        - name: HYPERDARK_KAFKA_ENDPOINTS
+          valueFrom:
+            configMapKeyRef:
+              name: endpoints
+              key: kafka-cluster
+        - name: HYPERDARK_CACHE_ENDPOINT
+          valueFrom:
+            configMapKeyRef:
+              name: endpoints
+              key: redis-server
+        - name: HYPERDARK_DB_ENDPOINT
+          valueFrom:
+            configMapKeyRef:
+              name: endpoints
+              key: postgres-cluster
+        - name: HYPERDARK_ES_ENDPOINTS
+          valueFrom:
+            configMapKeyRef:
+              name: endpoints
+              key: es-cluster
+        image: hyperdark
+        ports:
+        - containerPort: 9102
+          name: metrics
+          protocol: TCP
+        imagePullPolicy: Never
+        name: scoreboard
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: FallbackToLogsOnError
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: scoreboard
+spec:
+  clusterIP: 10.100.0.1
+  ports:
+  - name: http
+    port: 80
+    targetPort: 8080
+    protocol: TCP
+  selector:
+    app: scoreboard
+  type: LoadBalancer

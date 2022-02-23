@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: notifications-email
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: notifications-email
+  template:
+    metadata:
+      labels:
+        app: notifications-email
+        prom: monitor 
+    spec:
+      containers:
+      - name: agent
+        image: hyperdark
+        ports:
+        - containerPort: 9102
+          name: metrics
+          protocol: TCP        
+        imagePullPolicy: Never
+        args:
+        - /hyperdark
+        - --log.verbosity=10
+        - notifications
+        - email
+        - --smtp.endpoint=STDOUT
+        env:
+        - name: HYPERDARK_KAFKA_ENDPOINTS
+          valueFrom:
+            configMapKeyRef:
+              name: endpoints
+              key: kafka-cluster
+        resources: {}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: FallbackToLogsOnError

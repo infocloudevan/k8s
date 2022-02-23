@@ -1,0 +1,52 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: score-aggregate
+data:
+  aggregate.sql: |-
+    INSERT INTO latest_scores (
+      time, score, sector
+    ) (
+      SELECT DISTINCT ON (sector)
+        time_bucket('60 minutes', time) AS bucket,
+        exp_avg(score),
+        sector
+      FROM score_history
+        WHERE time > (now() - interval '24 hour')
+          AND sector != ''
+      GROUP BY bucket, sector
+      ORDER BY sector, bucket desc
+    ) ON CONFLICT (sector) DO UPDATE SET
+      time = excluded.time,
+      score = excluded.score;
+---
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: score-aggregator
+spec:
+  concurrencyPolicy: Forbid
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - args:
+            - /bin/sh
+            - -c
+            - psql postgres://dark3@timescale:5432/dark3?sslmode=disable < /scripts/aggregate.sql
+            image: activeshadow/aws-cli
+            imagePullPolicy: IfNotPresent
+            name: aggregator
+            terminationMessagePolicy: FallbackToLogsOnError
+            volumeMounts:
+            - mountPath: /scripts
+              name: scripts
+          restartPolicy: OnFailure
+          volumes:
+          - configMap:
+              name: score-aggregate
+            name: scripts
+  schedule: 0/5 * * * *
+  successfulJobsHistoryLimit: 0

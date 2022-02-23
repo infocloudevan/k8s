@@ -1,0 +1,23 @@
+*  We have added training videos to the support/help tab. You can now follow
+   along as our esteemed support engineer walks you through key aspects of
+   the D3UI. (We think there is an Emmy in John's future.)
+*  The composite graph was updated in the v22.0 release and the accuracy was
+   improved. However, due to the way we render the graph, a gap would
+   sometimes appear at the beginning or end. We have fixed that in this
+   release so that it remains a consistent smooth flow as it renders. Almost
+   too mesmerizing if you just stare at it for hours at a time.
+*  Our CEO constantly has network connectivity problems and wanted an alert
+   posted when his network connection dropped and then another alert when it
+   became active again. In the interest of code management, we have made that
+   feature available to you. (However, we cannot fix your network connection
+   issues; you will have to take that up with your ISP -- as he did.)
+*  Bug Fixes:
+  *  For some reason we decided to no longer support a filtered export of the
+     threat data table (we just gave you everything) or an import of a simple
+     text whitelist. Fixed now and you are welcome to export and import
+     duty-free.
+  *  If you had multiple sensors on an appliance and created a new group with
+     one or many of them, we did some odd things and only showed you data from
+     that point forward. It had to do with scoring and some other database
+     magic that our engineer has since corrected. The database is no longer in
+     timeout and should now show you all data for a given sensor group.

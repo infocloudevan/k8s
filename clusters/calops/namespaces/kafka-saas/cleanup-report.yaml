@@ -1,0 +1,95 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  annotations:
+    deployment.kubernetes.io/revision: "26"
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"extensions/v1beta1","kind":"Deployment","metadata":{"annotations":{},"labels":{"app":"cleanup-report"},"name":"cleanup-report","namespace":"kafka-saas"},"spec":{"progressDeadlineSeconds":2147483647,"replicas":1,"revisionHistoryLimit":10,"selector":{"matchLabels":{"app":"cleanup-report"}},"strategy":{"rollingUpdate":{"maxSurge":1,"maxUnavailable":1},"type":"RollingUpdate"},"template":{"metadata":{"annotations":{"date":"1582813401"},"creationTimestamp":null,"labels":{"app":"cleanup-report","prom":"monitor"}},"spec":{"containers":[{"args":["/hyperdark","--log.verbosity=10","cleanup","report","--blackbox.endpoint=scorecard.prod:8080","--kafka.input-topic=ReportStream01","--kafka.output-topic=ScoreStream"],"env":[{"name":"HYPERDARK_KAFKA_ENDPOINTS","valueFrom":{"configMapKeyRef":{"key":"kafka-cluster","name":"endpoints"}}},{"name":"HYPERDARK_CACHE_ENDPOINT","valueFrom":{"configMapKeyRef":{"key":"redis-server","name":"endpoints"}}},{"name":"HYPERDARK_CACHE_CLUSTER_ENDPOINTS","valueFrom":{"configMapKeyRef":{"key":"redis-cluster","name":"endpoints"}}},{"name":"HYPERDARK_DB_ENDPOINT","valueFrom":{"secretKeyRef":{"key":"postgres-cluster","name":"endpoints"}}}],"image":"078306444420.dkr.ecr.us-east-2.amazonaws.com/darkcubed/hyperdark:125fbaf","imagePullPolicy":"Always","name":"cleanup","ports":[{"containerPort":9102,"name":"metrics","protocol":"TCP"}],"resources":{},"terminationMessagePath":"/dev/termination-log","terminationMessagePolicy":"FallbackToLogsOnError"}],"dnsPolicy":"ClusterFirst","restartPolicy":"Always","schedulerName":"default-scheduler","securityContext":{},"terminationGracePeriodSeconds":30}}}}
+  creationTimestamp: 2019-08-17T22:20:21Z
+  generation: 204
+  labels:
+    app: cleanup-report
+  name: cleanup-report
+  namespace: kafka-saas
+  resourceVersion: "231864366"
+  selfLink: /apis/extensions/v1beta1/namespaces/kafka-saas/deployments/cleanup-report
+  uid: 3374d523-c13d-11e9-984d-02b425e82e0e
+spec:
+  progressDeadlineSeconds: 2147483647
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: cleanup-report
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+    type: RollingUpdate
+  template:
+    metadata:
+      annotations:
+        date: "1600107751"
+      creationTimestamp: null
+      labels:
+        app: cleanup-report
+        prom: monitor
+    spec:
+      containers:
+      - args:
+        - /hyperdark
+        - --log.verbosity=10
+        - cleanup
+        - report
+        - --blackbox.endpoint=scorecard.prod:8080
+        - --kafka.input-topic=ReportStream01
+        - --kafka.output-topic=ScoreStream
+        env:
+        - name: HYPERDARK_KAFKA_ENDPOINTS
+          valueFrom:
+            configMapKeyRef:
+              key: kafka-cluster
+              name: endpoints
+        - name: HYPERDARK_CACHE_ENDPOINT
+          valueFrom:
+            configMapKeyRef:
+              key: redis-server
+              name: endpoints
+        - name: HYPERDARK_CACHE_CLUSTER_ENDPOINTS
+          valueFrom:
+            configMapKeyRef:
+              key: redis-cluster
+              name: endpoints
+        - name: HYPERDARK_DB_ENDPOINT
+          valueFrom:
+            secretKeyRef:
+              key: postgres-cluster
+              name: endpoints
+        image: 078306444420.dkr.ecr.us-east-2.amazonaws.com/darkcubed/hyperdark:f2d65ca
+        imagePullPolicy: Always
+        name: cleanup
+        ports:
+        - containerPort: 9102
+          name: metrics
+          protocol: TCP
+        resources: {}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: FallbackToLogsOnError
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
+status:
+  availableReplicas: 1
+  conditions:
+  - lastTransitionTime: 2020-02-24T16:04:57Z
+    lastUpdateTime: 2020-02-24T16:04:57Z
+    message: Deployment has minimum availability.
+    reason: MinimumReplicasAvailable
+    status: "True"
+    type: Available
+  observedGeneration: 204
+  readyReplicas: 1
+  replicas: 1
+  updatedReplicas: 1

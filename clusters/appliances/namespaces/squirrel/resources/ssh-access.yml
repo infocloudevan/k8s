@@ -1,0 +1,24 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: ssh-access
+spec:
+  replicas: 0
+  selector:
+    matchLabels:
+      app: ssh-access
+  template:
+    metadata:
+      labels:
+        app: ssh-access
+    spec:
+      containers:
+      - image: quay.io/darkcubed/openssh-client
+        imagePullPolicy: Always
+        name: ssh
+        terminationMessagePolicy: FallbackToLogsOnError
+      hostNetwork: true
+      imagePullSecrets:
+      - name: quay.io
+      nodeSelector:
+        appliance: squirrel

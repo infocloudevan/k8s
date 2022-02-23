@@ -1,0 +1,63 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"batch/v1beta1","kind":"CronJob","metadata":{"annotations":{},"creationTimestamp":"2019-11-20T20:28:11Z","name":"fix-zero-scores","namespace":"kafka-saas","selfLink":"/apis/batch/v1beta1/namespaces/kafka-saas/cronjobs/fix-zero-scores","uid":"456dcb7f-0bd4-11ea-b7e4-02c6bb02f104"},"spec":{"concurrencyPolicy":"Forbid","failedJobsHistoryLimit":1,"jobTemplate":{"metadata":{"creationTimestamp":null},"spec":{"template":{"metadata":{"creationTimestamp":null},"spec":{"containers":[{"args":["/hyperdark","--log.verbosity=10","--es.endpoints=https://cluster-es-http.kube-system:9200","--es.credentials=elastic:bdj54q9pnlbbq7j6v5kqbwf6","utils","fix-zero-scores"],"env":[{"name":"HYPERDARK_KAFKA_ENDPOINTS","valueFrom":{"configMapKeyRef":{"key":"kafka-cluster","name":"endpoints"}}},{"name":"HYPERDARK_CACHE_ENDPOINT","valueFrom":{"configMapKeyRef":{"key":"redis-server","name":"endpoints"}}},{"name":"HYPERDARK_CACHE_CLUSTER_ENDPOINTS","valueFrom":{"configMapKeyRef":{"key":"redis-cluster","name":"endpoints"}}}],"image":"078306444420.dkr.ecr.us-east-2.amazonaws.com/darkcubed/hyperdark:26ea303","imagePullPolicy":"Always","name":"fixer","resources":{},"terminationMessagePath":"/dev/termination-log","terminationMessagePolicy":"File"}],"dnsPolicy":"ClusterFirst","restartPolicy":"OnFailure","schedulerName":"default-scheduler","securityContext":{},"terminationGracePeriodSeconds":30}}}},"schedule":"0 */6 * * *","successfulJobsHistoryLimit":1,"suspend":true}}
+  creationTimestamp: 2019-11-20T20:28:11Z
+  name: fix-zero-scores
+  namespace: kafka-saas
+  resourceVersion: "165175529"
+  selfLink: /apis/batch/v1beta1/namespaces/kafka-saas/cronjobs/fix-zero-scores
+  uid: 456dcb7f-0bd4-11ea-b7e4-02c6bb02f104
+spec:
+  concurrencyPolicy: Forbid
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    metadata:
+      creationTimestamp: null
+    spec:
+      template:
+        metadata:
+          creationTimestamp: null
+        spec:
+          containers:
+          - args:
+            - /hyperdark
+            - --log.verbosity=10
+            - --es.endpoints=https://cluster-es-http.kube-system:9200
+            - --es.credentials=elastic:bdj54q9pnlbbq7j6v5kqbwf6
+            - utils
+            - fix-zero-scores
+            env:
+            - name: HYPERDARK_KAFKA_ENDPOINTS
+              valueFrom:
+                configMapKeyRef:
+                  key: kafka-cluster
+                  name: endpoints
+            - name: HYPERDARK_CACHE_ENDPOINT
+              valueFrom:
+                configMapKeyRef:
+                  key: redis-server
+                  name: endpoints
+            - name: HYPERDARK_CACHE_CLUSTER_ENDPOINTS
+              valueFrom:
+                configMapKeyRef:
+                  key: redis-cluster
+                  name: endpoints
+            image: 078306444420.dkr.ecr.us-east-2.amazonaws.com/darkcubed/hyperdark:26ea303
+            imagePullPolicy: Always
+            name: fixer
+            resources: {}
+            terminationMessagePath: /dev/termination-log
+            terminationMessagePolicy: File
+          dnsPolicy: ClusterFirst
+          restartPolicy: OnFailure
+          schedulerName: default-scheduler
+          securityContext: {}
+          terminationGracePeriodSeconds: 30
+  schedule: 0 */6 * * *
+  successfulJobsHistoryLimit: 1
+  suspend: true
+status:
+  lastScheduleTime: 2020-04-21T00:00:00Z

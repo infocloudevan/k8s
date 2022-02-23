@@ -1,0 +1,43 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: leadoff-traffic-doc
+spec:
+  replicas: 1
+  template:
+    metadata:
+      annotations:
+      labels:
+        app: leadoff-traffic-doc
+        prom: monitor
+    spec:
+      containers:
+      - args:
+        - /leadoff
+        - --log.verbosity=10
+        - traffic-doc
+        env:
+        - name: LEADOFF_TRAFFIC_DOC_KAFKA_ENDPOINTS
+          valueFrom: 
+            configMapKeyRef:
+              name: endpoints
+              key: kafka-cluster
+        - name: LEADOFF_TRAFFIC_DOC_ES_ENDPOINTS
+          valueFrom: 
+            configMapKeyRef:
+              name: endpoints
+              key: es-cluster
+        - name: LEADOFF_TRAFFIC_DOC_ES_CREDENTIALS
+          valueFrom: 
+            secretKeyRef:
+              name: elastic-user
+              key: creds
+        image: quay.io/darkcubed/leadoff:release-v1.0_alpha-3dc9aba
+        imagePullPolicy: Always
+        name: leadoff
+        ports:
+        - name: metrics
+          containerPort: 9102
+          protocol: TCP
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: FallbackToLogsOnError

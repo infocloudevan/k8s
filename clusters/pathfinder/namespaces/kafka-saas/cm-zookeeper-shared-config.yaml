@@ -1,0 +1,63 @@
+apiVersion: v1
+data:
+  disk-usage-agent.properties: |2
+
+    disk.data=/mnt/data/data
+    disk.logs=/mnt/data/txnlog
+    service.name=zookeeper
+  jvm.config: |2
+
+    -Xmx4G
+    -Xms4G
+    -XX:+UnlockExperimentalVMOptions
+    -XX:+UseCGroupMemoryLimitForHeap
+
+    -verbose:gc
+    -XX:+PrintGCDetails
+    -XX:+PrintGCDateStamps
+    -XX:+PrintGCTimeStamps
+    -XX:+UseGCLogFileRotation
+    -XX:NumberOfGCLogFiles=10
+    -XX:GCLogFileSize=100M
+
+    -server
+    -XX:+UseG1GC
+    -XX:MaxGCPauseMillis=20
+    -XX:InitiatingHeapOccupancyPercent=35
+    -XX:+ExplicitGCInvokesConcurrent
+    -Djava.awt.headless=true
+
+    -Dcom.sun.management.jmxremote=true
+    -Dcom.sun.management.jmxremote.authenticate=false
+    -Dcom.sun.management.jmxremote.ssl=false
+    -Dcom.sun.management.jmxremote.local.only=false
+    -Dcom.sun.management.jmxremote.rmi.port=7203
+    -Dcom.sun.management.jmxremote.port=7203
+
+    -XX:+PrintFlagsFinal
+    -XX:+UnlockDiagnosticVMOptions
+  log4j.properties: |
+    log4j.appender.stdout=org.apache.log4j.ConsoleAppender
+    log4j.appender.stdout.layout=org.apache.log4j.EnhancedPatternLayout
+    log4j.appender.stdout.layout.ConversionPattern=[%p] %d [%t] %c %M - %m%n
+
+    log4j.rootLogger=INFO, stdout
+  zookeeper.properties: |2
+
+    quorumListenOnAllIPs=true
+    syncLimit=5
+    initLimit=10
+    dataDir=/mnt/data/data
+    dataLogDir=/mnt/data/txnlog
+    autopurge.purgeInterval=1
+kind: ConfigMap
+metadata:
+  creationTimestamp: "2019-08-19T22:02:26Z"
+  labels:
+    namespace: kafka-saas
+    type: zookeeper
+  name: zookeeper-shared-config
+  namespace: kafka-saas
+  resourceVersion: "6027199"
+  selfLink: /api/v1/namespaces/kafka-saas/configmaps/zookeeper-shared-config
+  uid: 07dfe241-c2cd-11e9-845f-0a9658482414

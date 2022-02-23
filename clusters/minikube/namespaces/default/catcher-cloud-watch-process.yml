@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: catcher-cloud-watch-process
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: catcher-cloud-watch-process
+  template:
+    metadata:
+      labels:
+        app: catcher-cloud-watch-process
+        prom: monitor
+    spec:
+      containers:
+        - args:
+            - /hyperdark
+            - --log.verbosity=10
+            - catcher
+            - cloud-watch-process
+          env:
+            - name: HYPERDARK_KAFKA_ENDPOINTS
+              valueFrom:
+                configMapKeyRef:
+                  name: endpoints
+                  key: kafka-cluster
+            - name: HYPERDARK_CACHE_ENDPOINT
+              valueFrom:
+                configMapKeyRef:
+                  name: endpoints
+                  key: redis-server
+            - name: HYPERDARK_DB_ENDPOINT
+              valueFrom:
+                configMapKeyRef:
+                  name: endpoints
+                  key: postgres-cluster
+          image: hyperdark
+          ports:
+            - containerPort: 9102
+              name: metrics
+              protocol: TCP
+          imagePullPolicy: Never
+          name: catcher-cloud-watch-process
+          resources: {}
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: FallbackToLogsOnError

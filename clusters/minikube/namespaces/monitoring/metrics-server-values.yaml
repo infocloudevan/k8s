@@ -1,0 +1,10 @@
+args:
+  - --kubelet-insecure-tls
+  - --kubelet-preferred-address-types=InternalIP
+image:
+  pullPolicy: IfNotPresent
+  repository: k8s.gcr.io/metrics-server/metrics-server
+  tag: v0.3.7
+livenessProbe:
+readinessProbe:
+replicas: 1

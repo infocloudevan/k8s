@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"v1","kind":"Service","metadata":{"annotations":{},"labels":{"prom":"monitor"},"name":"coach-handler","namespace":"kafka-saas"},"spec":{"ports":[{"name":"http","port":8080,"protocol":"TCP"},{"name":"metrics","port":9102,"protocol":"TCP"}],"selector":{"app":"coach-handler"}}}
+  creationTimestamp: 2019-08-16T23:20:59Z
+  labels:
+    prom: monitor
+  name: coach-handler
+  namespace: kafka-saas
+  resourceVersion: "167377419"
+  selfLink: /api/v1/namespaces/kafka-saas/services/coach-handler
+  uid: 818433bc-c07c-11e9-984d-02b425e82e0e
+spec:
+  clusterIP: 100.66.229.202
+  ports:
+  - name: http
+    port: 8080
+    protocol: TCP
+    targetPort: 8080
+  selector:
+    app: coach-handler
+  sessionAffinity: None
+  type: ClusterIP
+status:
+  loadBalancer: {}

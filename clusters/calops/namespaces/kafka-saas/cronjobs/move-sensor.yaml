@@ -1,0 +1,95 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  labels:
+    app: move-sensor
+    tags.datadoghq.com/env: saas
+    tags.datadoghq.com/service: move-sensor
+    tags.datadoghq.com/version: 1f5e796
+  name: move-sensor
+  namespace: kafka-saas
+spec:
+  concurrencyPolicy: Forbid
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    metadata:
+      creationTimestamp: null
+    spec:
+      template:
+        metadata:
+          labels:
+            tags.datadoghq.com/env: saas
+            tags.datadoghq.com/service: move-sensor
+            tags.datadoghq.com/version: 1f5e796
+          creationTimestamp: null
+        spec:
+          containers:
+          - args:
+            - /hyperdark
+            - --log.verbosity 10
+            - utils
+            - move-sensor-to-new-account
+            - --sensors-migration.data=DATA
+            env:
+            - name: DD_ENV
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: metadata.labels['tags.datadoghq.com/env']
+            - name: DD_SERVICE
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: metadata.labels['tags.datadoghq.com/service']
+            - name: DD_VERSION
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: metadata.labels['tags.datadoghq.com/version']
+            - name: HYPERDARK_KAFKA_ENDPOINTS
+              valueFrom:
+                configMapKeyRef:
+                  key: kafka-cluster
+                  name: endpoints
+            - name: HYPERDARK_CACHE_ENDPOINT
+              valueFrom:
+                configMapKeyRef:
+                  key: redis-server
+                  name: endpoints
+            - name: HYPERDARK_CACHE_CLUSTER_ENDPOINTS
+              valueFrom:
+                configMapKeyRef:
+                  key: redis-cluster
+                  name: endpoints
+            - name: HYPERDARK_DB_ENDPOINT
+              valueFrom:
+                secretKeyRef:
+                  key: postgres-cluster
+                  name: endpoints
+            - name: HYPERDARK_ES_ENDPOINTS
+              valueFrom:
+                configMapKeyRef:
+                  key: es-cluster
+                  name: endpoints
+            - name: HYPERDARK_ES_CREDENTIALS
+              valueFrom:
+                secretKeyRef:
+                  key: creds
+                  name: elastic-user
+            image: 078306444420.dkr.ecr.us-east-2.amazonaws.com/darkcubed/hyperdark:1f5e796
+            imagePullPolicy: Always
+            name: hyperdark
+            resources:
+              requests:
+                cpu: 50m
+                memory: 64Mi
+            terminationMessagePath: /dev/termination-log
+            terminationMessagePolicy: File
+          dnsPolicy: ClusterFirst
+          restartPolicy: OnFailure
+          schedulerName: default-scheduler
+          securityContext: {}
+          terminationGracePeriodSeconds: 30
+  schedule: 30 5 * * *
+  successfulJobsHistoryLimit: 3
+  suspend: true

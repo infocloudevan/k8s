@@ -1,0 +1,24 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: logs-{{APPLIANCE}}-{{CONTAINER}}
+  namespace: {{NAMESPACE}}
+spec:
+  template:
+    metadata:
+      name: logs-{{APPLIANCE}}-{{CONTAINER}}
+    spec:
+      nodeSelector:
+        appliance: {{APPLIANCE}}
+      containers:
+      - name: logs
+        image: activeshadow/logs
+        args: ["{{CONTAINER}}", "https://status.d3oc.darkcubed.io/config"]
+        volumeMounts:
+        - name: docker-sock
+          mountPath: /tmp/docker.sock
+      restartPolicy: Never
+      volumes:
+      - name: docker-sock
+        hostPath:
+          path: /var/run/docker.sock

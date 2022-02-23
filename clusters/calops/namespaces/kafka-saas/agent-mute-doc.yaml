@@ -1,0 +1,109 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  annotations:
+    deployment.kubernetes.io/revision: "97"
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"extensions/v1beta1","kind":"Deployment","metadata":{"annotations":{},"labels":{"app":"agent-mute-doc"},"name":"agent-mute-doc","namespace":"kafka-saas"},"spec":{"progressDeadlineSeconds":600,"replicas":10,"revisionHistoryLimit":10,"selector":{"matchLabels":{"app":"agent-mute-doc"}},"strategy":{"rollingUpdate":{"maxSurge":"25%","maxUnavailable":"25%"},"type":"RollingUpdate"},"template":{"metadata":{"annotations":{"date":"1589810408"},"creationTimestamp":null,"labels":{"app":"agent-mute-doc","prom":"monitor"}},"spec":{"containers":[{"args":["/hyperdark","--log.verbosity=8","agent","mute","doc"],"env":[{"name":"HYPERDARK_KAFKA_ENDPOINTS","valueFrom":{"configMapKeyRef":{"key":"kafka-cluster","name":"endpoints"}}},{"name":"HYPERDARK_DB_ENDPOINT","valueFrom":{"secretKeyRef":{"key":"postgres-cluster","name":"endpoints"}}},{"name":"HYPERDARK_ES_ENDPOINTS","valueFrom":{"configMapKeyRef":{"key":"es-cluster","name":"endpoints"}}},{"name":"HYPERDARK_ES_CREDENTIALS","valueFrom":{"secretKeyRef":{"key":"creds","name":"elastic-user"}}},{"name":"HYPERDARK_CACHE_ENDPOINT","valueFrom":{"configMapKeyRef":{"key":"redis-server","name":"endpoints"}}},{"name":"HYPERDARK_CACHE_CLUSTER_ENDPOINTS","valueFrom":{"configMapKeyRef":{"key":"redis-cluster","name":"endpoints"}}}],"image":"078306444420.dkr.ecr.us-east-2.amazonaws.com/darkcubed/hyperdark:125fbaf","imagePullPolicy":"Always","name":"agent","ports":[{"containerPort":9102,"name":"metrics","protocol":"TCP"}],"resources":{},"terminationMessagePath":"/dev/termination-log","terminationMessagePolicy":"FallbackToLogsOnError"}],"dnsPolicy":"ClusterFirst","restartPolicy":"Always","schedulerName":"default-scheduler","securityContext":{},"terminationGracePeriodSeconds":30}}}}
+  creationTimestamp: 2020-02-24T20:02:08Z
+  generation: 151
+  labels:
+    app: agent-mute-doc
+  name: agent-mute-doc
+  namespace: kafka-saas
+  resourceVersion: "213724347"
+  selfLink: /apis/extensions/v1beta1/namespaces/kafka-saas/deployments/agent-mute-doc
+  uid: 89b5e542-5740-11ea-a064-067d46b7253a
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 10
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: agent-mute-doc
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      annotations:
+        date: "1589810408"
+      creationTimestamp: null
+      labels:
+        app: agent-mute-doc
+        prom: monitor
+    spec:
+      containers:
+      - args:
+        - /hyperdark
+        - --log.verbosity=8
+        - agent
+        - mute
+        - doc
+        env:
+        - name: HYPERDARK_KAFKA_ENDPOINTS
+          valueFrom:
+            configMapKeyRef:
+              key: kafka-cluster
+              name: endpoints
+        - name: HYPERDARK_DB_ENDPOINT
+          valueFrom:
+            secretKeyRef:
+              key: postgres-cluster
+              name: endpoints
+        - name: HYPERDARK_ES_ENDPOINTS
+          valueFrom:
+            configMapKeyRef:
+              key: es-cluster
+              name: endpoints
+        - name: HYPERDARK_ES_CREDENTIALS
+          valueFrom:
+            secretKeyRef:
+              key: creds
+              name: elastic-user
+        - name: HYPERDARK_CACHE_ENDPOINT
+          valueFrom:
+            configMapKeyRef:
+              key: redis-server
+              name: endpoints
+        - name: HYPERDARK_CACHE_CLUSTER_ENDPOINTS
+          valueFrom:
+            configMapKeyRef:
+              key: redis-cluster
+              name: endpoints
+        image: 078306444420.dkr.ecr.us-east-2.amazonaws.com/darkcubed/hyperdark:f2d65ca
+        imagePullPolicy: Always
+        name: agent
+        ports:
+        - containerPort: 9102
+          name: metrics
+          protocol: TCP
+        resources: {}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: FallbackToLogsOnError
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
+status:
+  availableReplicas: 10
+  conditions:
+  - lastTransitionTime: 2020-07-24T02:06:13Z
+    lastUpdateTime: 2020-07-24T02:06:13Z
+    message: Deployment has minimum availability.
+    reason: MinimumReplicasAvailable
+    status: "True"
+    type: Available
+  - lastTransitionTime: 2020-02-24T20:02:08Z
+    lastUpdateTime: 2020-08-15T03:42:35Z
+    message: ReplicaSet "agent-mute-doc-ddc89b54" has successfully progressed.
+    reason: NewReplicaSetAvailable
+    status: "True"
+    type: Progressing
+  observedGeneration: 151
+  readyReplicas: 10
+  replicas: 10
+  updatedReplicas: 10

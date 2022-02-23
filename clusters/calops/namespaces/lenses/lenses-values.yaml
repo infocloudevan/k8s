@@ -1,0 +1,162 @@
+replicaCount: 1
+
+nodeSelector: {}
+tolerations: {}
+affinity: {}
+
+monitoring:
+  pipeline: lenses
+  enabled: true
+  port: 9102
+  path: "/metrics"
+
+resources:
+  limits:
+    memory: 5Gi
+  requests:
+    memory: 1Gi
+
+rbacEnable: true
+
+persistence:
+  enabled: true
+  accessModes:
+    - ReadWriteOnce
+  size: 11Gi
+  storageClass: "aws-es"
+
+ingress:
+  enabled: true
+  host: lenses.a.darkcubed.net
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    kubernetes.io/tls-acme: "true"
+    ingress.kubernetes.io/rewrite-target: /
+    certmanager.k8s.io/cluster-issuer: letsencrypt
+  tls:
+    enabled: true
+    secretName: lenses-ingress-tls
+
+lenses:
+  tls:
+    enabled: false
+
+  kafka:
+    ssl:
+      enabled: false
+    sasl:
+      enabled: false
+    metrics:
+      enabled: true
+      #type: "JMX"
+      #port: 11001
+      type: "AWS"
+      ports:
+        - id: 1
+          url: http://kafka-b1.darkcubed.calops:11001
+        - id: 2
+          url: http://kafka-b2.darkcubed.calops:11001
+        - id: 3
+          url: http://kafka-b3.darkcubed.calops:11001
+        - id: 4
+          url: http://kafka-b4.darkcubed.calops:11001
+        - id: 5
+          url: http://kafka-b5.darkcubed.calops:11001
+        - id: 6
+          url: http://kafka-b6.darkcubed.calops:11001
+      #username:
+      #password:
+      #ssl:
+      aws.cache.ttl.ms: 60000
+      http.timeout.ms: 120000
+    
+    bootstrapServers:
+      - name: kafka-b1.darkcubed.calops # b-1.darkcubed.calops
+        port: 9092
+        sslPort: 9094
+      - name: kafka-b2.darkcubed.calops # b-2.darkcubed.calops
+        port: 9092
+        sslPort: 9094
+      - name: kafka-b3.darkcubed.calops # b-3.darkcubed.calops
+        port: 9092
+        sslPort: 9094
+      - name: kafka-b4.darkcubed.calops # b-4.darkcubed.calops
+        port: 9092
+        sslPort: 9094
+      - name: kafka-b5.darkcubed.calops # b-5.darkcubed.calops
+        port: 9092
+        sslPort: 9094
+      - name: kafka-b6.darkcubed.calops # b-6.darkcubed.calops
+        port: 9092
+        sslPort: 9094
+
+  zookeepers:
+    enabled: true
+    chroot:
+    hosts:
+    - host: zookeeper-n1.darkcubed.calops
+      port: 2181
+    - host: zookeeper-n2.darkcubed.calops
+      port: 2181
+    - host: zookeeper-n3.darkcubed.calops
+      port: 2181
+
+
+  schemaRegistries:
+    enabled: false
+    mode:
+    topic:
+    hosts:
+      - host: schema-registry
+        protocol: http
+        port: 8081
+        path:
+
+    security:
+      enabled: false
+      authType:
+      username:
+      password:
+      kerberos:
+        enabled: false
+        principal:
+        serviceName:
+        keytabData: |-
+        jaasFileData: |-
+
+  connectClusters:
+    enabled: true
+    clusters:
+      - name: confluent-connect-cluster-2
+        port: 8083
+        protocol: http
+        offsetsTopic: confluent-connect-offsets
+        statusTopic: confluent-connect-status
+        configTopic: confluent-connect-configs
+        hosts:
+        - host: connect.darkcubed.calops
+          metrics:
+            type: "JMX"
+            port: 9978
+            protocol: http
+
+  sql:
+    processorImage: lensesioextra/sql-processor
+    processorImageTag: 4.0
+    mode: KUBERNETES
+    heap: 1024M
+    memLimit: 1152M
+    memRequest: 128M
+
+  grafanaUrl: "https://shark.a.darkcubed.net"
+
+  topics:
+    suffix: lenses
+
+  security:
+    defaultUser:
+      username: "D3admin"
+      password: "DarkCub3d!!"
+
+  license: |-
+    {"key": "eyJhbGciOiJBMTI4S1ciLCJlbmMiOiJBMTI4Q0JDLUhTMjU2In0.Vq2EHZMvHN-5DYMTxuXjL3VU7hJTH3cITUF01N1JJ5TDcSGc4JMcTQ.qGqn1fG1e8j3RLP5TCKNHw.XKVyCDzQYndQyrQQEusgqbIGzE5vCXVW0DdvCGIkMjYyTIySKarLp_FTtW9p2E12NB9kmpqQUh6-5ZKoUqRu6Fz1f5YyHHonVa57Qo9zlwy9h_uESDCEL3tXuRh5xeM-CcW_kKsZiicoBNx6WqeGtcUvJklTyLJHZHY4xVpVWuldGp_ffmIQx-Vmw27V8uK_d-CgZ2-CYj9UAbTd3TmEUc6E_NoyFpucKI3O2I6QLCnrTucJaMyD4SXL905GXG9cPI5yN-Mk9qbZsBeeGUZqT3hxeO00e2C4UOduqH9biGWV4K8Vf4RDbPqjB2nlrUsznuSZwFXFpmWvfM301nSJ18n8bFfHfft-tdThTicpv58P-_N9XfufNbAozKC_V1Z9BOXdhTQVYnG37DQelDap6CGuvnwCXdaQ8J8-zp8plLc4lr5JlxUQfUl1CMxPw1CPtEdDyr2Ekwo0wA-tsYU_DmJem0oh2hWocc3cSFdr1BNelr7qdqSw0Syaeyz1BYYiWTW4ClYm2zkoERmSvudbrOVPn9qLfgMdBWOmREqc5-u4KOpJQUiYzidVt8kAYqw1KxC9B2n41vYvy7pPR1Ly-O7KysoAD8HXt3KBPvlAMjn-OuVix5wj3a05P-4BiG_UO6mPkgW1pzZ9KzqwVsOeMabPyybdPWYQbdoCQbcwmFnsXtDfbwHDFoL-K6N8GSnHascJnKUZ8FZPKH6SGIKJtAJck6MTuQTcYUCs5cYRfNzqyhoAGGCiZYIxmN4fxCYjSYWHYcLhgpcijyzsICFxOhoUgxrvOkHxkSmMsmwUa1cpa9SdJaXTgi85KMRpVokjS0Zb6crxa_rPD9lPlSCoUSFfD50Di_kiB9Uv_3DGV1NwXt3JpgcqQmFgnRog9iD1x2Vqqtnaz7cFaQjHS6Bfup9DhZA3iNn0qzzu6ROGrj4srwrMMi-csGrBPqhxc53ZL4tOxPy5yw21AzNsRkMJgKA1Z9bx6JoCbPFCh8VezWtq6ERLJVeY2PEzDtZErJFck_415raIHttESMezE_vrfPRjln3or_ZaJFrNvnwLK3nluOHqQJxultimVm457qFkYZEHms-f2Ofg5OHkBwGfxQGxjIuEH05k91jzpt6EMxS_tutLSYaUB7-0GBx_gaZuxRNJDgmn5-1hIcvoFoO_10-cbY49GqU7tDVV1vfnN73EqUY-W9601PaGbTcvfLwCdkZZsBiPvaEU_EX4HKkyLSvOzYZUKN41bCmifhIfBzrGEdWa2x2knHAOhezXGWW_fkCO1TG3Yi4jy4f0mYHxuzZFwaYo8knisFYC0iVrwSaIPmfJialOzJtiM-92VQ_VKSMIe9zhGMfIUKJV4lG2NzGomXW-caZxMw0g8POjtng4yQjcpocitYcvAJq2MyNjD8DKEJpIiel4hHGdSh4NGiLh3D8KC8PR28Qb-Hwj3R5VtEXxvLTp_U8aZhxJ3x9j1wCiELh4x_MA4IFOh8dfoQWnUuZEUfaNBX2V35C62602VAU00ciCAEabouHa2Bl2uLd7UVcdX_BG7AkBcT28dTm7YFSWxXEmQPCEAzYrNgiQbN11vwGfQ6yVfCXlipoCXb5xGSM7jxeoimAQJEu0CaXLIWKSB4bVkp0hE2amiwwrTxwVwRrm2XeszhDCOlBDmsqp--V1xZN3u6G52rAsd1-91UkHuom8y3u5EROppNv63QSqPZFxBzPqGn3nowmHUw60bTb9ZvRBCCQFHBPx3oW23Gcrxx7vWuhnLy5yiakg3us5InbZbQ2ONCXI5YHOarhvEz3Abu2K8b9xfiMaMMbCo5P7y67aBx4pC3Hm5TfalKiPA6hwhdCwntaa7fcqt9KeSkP2nWDvolytq8G0SUu6e29ubMkyo441BApF-gQY6MRwjOfv-swKWyGRkLltSMfGQvhEx6b9pZXgy503xZtYR-0_sVJmjX24_jFJUswmVvhkoPuN4umFXkjuQWRJA58NpmWimBWeUZvBnn6pGMUpQcbMoxjIN2LQGswv5sYLxaBOZoyRTie9fJd4d4U9hmoEUzs-XzW937zyd8o-pnJObdGkqolGB0NAPLJybPhVl2DSk17n6jLp4Zb2odxEEETv9bCCCX4fP7EXGVsmS03QbhjOBomoscq954d2K_EA36Jgqq1NtwJRLYSmr4UTj7UDFFJqUhGF8y6sNa27H2e7-7hFlWWbZc6K4Q4StdBdeio3a6V9IsTx7HKwj1CjoUoYBvUYWahjkj89Bc3_sBskphwQQSixvam0XN7GjP38fsz4nCC-8AUoLNcmK18E3-vU4XOnSE480NS5xCY5RrInPLjDvmG1giZ3mszXGOWrSq0yk-46GZ6O_w7QYVDdEdGhQUKkJ1DL6g2KbHOjqnk3s25X03SP9UTdls8IdThow2ZjVLWDN0xoVjaEUq6aRtIciGBwWYPVvFJ57oVpAyyBD0uzI3EHWsYZCc-2Tg2-aVVHlOdoD1k3tmkYOoxQMy_XUNFquRuWj38M4Pbcp46VH6DLt-b2qn17pPFG3r7KL23HAYwgWLc_6vujJYvGdpI24xop9AiBLxZaH0LRnXEQXr0ouIy25I9Kp1zehdIf58NCC5woyoiequEAtksWzpZjw6ge5iTz2zbdq2z1woa3YOPtuFdfrBH_7dq07mzFkYJcIvJ9XcL5bQf1Ht_qq-J6HWcmwjUgmvoc9buJk9vycWT3E9ku-S53rZq_6lP0DtW6etB-zAgYcyNPlx-wADiefwaAU79IN-152X8HSVsEGniQSHGt5h7XrCT-pkCpn5GImD6wcBwq-BzQ8mkdB9wDCid1Zse6Q0keaNH9Uj73Tj3hP3kkxt90wstFJclJpDJagoiGE_p9hxeMdX_dSD2HiNc8EgPqGMlHktM0OqOJuuRejTOxNc0i6bqdm7YY031gB9hxJ2NobsA690T8hG8ouwU_6A1PFEJYHF9s1s-1uS3bLy8fkQDCdYu45vUKNeWPvFZMoNfAX6e0_9kh-yKR8yMBL9fKY7G6BskRVns5r1XNRboWgVt-dJ5yBvenbQg0vctDRlxKlLDd2CgLqoORi-UbSvsfuOFiK-DjiE7gizbnf-tGV0pGBRJDBdGnYBAwfDX4Fx7gTH0nRiRwHzgp4zTG3xf1BqyqNiBN9dEmcuLIocA0X0w_H6b-cQR9vXR1fToPeYfMNlADF8hoWEEMrrggBXxKupd0eHJrcxmTm2TTSS6RtLlwlZ2Ycw7dP8Z8SsO7ZskYleGX09EUHjS7bg0pt1MGoSBQqnqX6XkZgXvf5dMqIE2GZJkcPSuSr7BAc8Z90zMnhn3-Br2-IpT5gtn9wfOZ0EBebanUE-K92zDHLo4r1ni_0Ib11tkrqO8Hw8pxLUVvZ3bffI2g46rSAl1b52gsuuAjvnVaHAkAQ1p8-UYOGSsZFa-Uc5CPwp0rxnyBVkBjqXlCnfTl8WmQnq1xdHLi3kmzxXYzFmKSGPlWFOdeqKdMXXeAKFg.nRMyZyd5Xz37o9HWXLpnfw", "source": "Lenses.io Ltd", "details": "Lenses", "clientId": "00009b65-aea8-11eb-9025-42010af01003"}

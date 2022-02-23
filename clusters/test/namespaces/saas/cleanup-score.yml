@@ -1,0 +1,58 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: cleanup-score
+spec:
+  replicas: 1
+  template:
+    metadata:
+      annotations:
+      labels:
+        app: cleanup-score
+        prom: monitor
+    spec:
+      containers:
+      - args:
+        - /cleanup
+        - --log.verbosity=10
+        - score
+        env:
+        - name: CLEANUP_SCORE_KAFKA_ENDPOINTS
+          valueFrom: 
+            configMapKeyRef:
+              name: endpoints
+              key: kafka-cluster
+        - name: CLEANUP_SCORE_CACHE_ENDPOINT
+          valueFrom: 
+            configMapKeyRef:
+              name: endpoints
+              key: redis-server
+        - name: CLEANUP_SCORE_DB_ENDPOINT
+          valueFrom: 
+            configMapKeyRef:
+              name: endpoints
+              key: postgres-cluster
+        - name: CLEANUP_SCORE_ES_ENDPOINTS
+          valueFrom: 
+            configMapKeyRef:
+              name: endpoints
+              key: es-cluster
+        - name: CLEANUP_SCORE_ES_CREDENTIALS
+          valueFrom: 
+            secretKeyRef:
+              name: elastic-user
+              key: creds
+        - name: CLEANUP_SCORE_BLACKBOX_ENDPOINT
+          valueFrom: 
+            configMapKeyRef:
+              name: endpoints
+              key: blackbox-server 
+        image: quay.io/darkcubed/cleanup:release-v1.0_alpha-5006b4e
+        imagePullPolicy: Always
+        name: cleanup
+        ports:
+        - name: metrics
+          containerPort: 9102
+          protocol: TCP
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: FallbackToLogsOnError

@@ -1,0 +1,36 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: appliance-logs-{{APPLIANCE}}
+spec:
+  template:
+    metadata:
+      name: appliance-logs-{{APPLIANCE}}
+    spec:
+      nodeSelector:
+        appliance: {{APPLIANCE}}
+      hostNetwork: true
+      containers:
+      - args:
+        - {{TYPE}}
+        - "{{COMMAND}}"
+        - https://radar.a.darkcubed.net/receiver
+        env:
+        - name: BEARER
+          value: Aekeiqua5duWaibenaa5feo0phot9Lienge1
+        name: logs
+        image: activeshadow/logs
+        imagePullPolicy: Always
+        volumeMounts:
+        - name: docker-sock
+          mountPath: /tmp/docker.sock
+        - name: rootfs
+          mountPath: /rootfs
+      restartPolicy: Never
+      volumes:
+      - name: docker-sock
+        hostPath:
+          path: /var/run/docker.sock
+      - name: rootfs
+        hostPath:
+          path: /

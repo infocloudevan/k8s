@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: endpoints
+data:
+  blackbox-server: MOCK
+  es-cluster: https://cluster-es-http.kube-system:9200
+  kafka-cluster: kafka-kafka-bootstrap.kube-system:9092
+  postgres-cluster: postgres://application:dark3@saasdb:5432/dark3
+  redis-server: redis-master:6379

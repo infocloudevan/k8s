@@ -1,0 +1,27 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: d3oc-metadata-lists
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: d3oc-metadata-lists
+    spec:
+      containers:
+      - env:
+        - name: PRODDB
+          value: psql://d3postgresql:oon6ooc4OoviTohp@test-d3oc.cmfxlqcsk74c.us-east-2.rds.amazonaws.com:5432/d3main
+        - name: BEANSTALKD_SERVER
+          value: beanstalk:11300
+        - name: BEANSTALK_TUBE
+          value: lists
+        image: 078306444420.dkr.ecr.us-east-2.amazonaws.com/darkcubed/d3oc-metadata-lists:v1.2.0
+        imagePullPolicy: IfNotPresent
+        name: worker
+        resources:
+          requests:
+            cpu: 20m
+            memory: 64Mi
+        terminationMessagePolicy: FallbackToLogsOnError

@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: api
+  template:
+    metadata:
+      labels:
+        app: api
+    spec:
+      containers:
+      - args:
+        - /hyperdark
+        - d3oc
+        - gateway
+        - --app.listen-endpoint=0.0.0.0:8080
+        - --app.scorecard-endpoint=scorecard.prod:8080
+        env:
+        - name: GRPC_GO_LOG_SEVERITY_LEVEL
+          value: INFO
+        - name: GRPC_GO_LOG_VERBOSITY_LEVEL
+          value: "2"
+        image: 078306444420.dkr.ecr.us-east-2.amazonaws.com/darkcubed/hyperdark:{TAG}
+        imagePullPolicy: Always
+        name: api
+        ports:
+        - containerPort: 8080
+          name: grpc
+          protocol: TCP
+        resources:
+          requests:
+            cpu: 150m
+            memory: 32Mi
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: FallbackToLogsOnError
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: api
+spec:
+  ports:
+  - name: grpc
+    port: 8080
+    protocol: TCP
+  selector:
+    app: api

@@ -1,0 +1,25 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: reports-scheduler-cronjob
+spec:
+  schedule: ' 0 * * * * '
+  suspend: true
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+          - name: psql
+            image: crosbymichael/psql
+            imagePullPolicy: IfNotPresent
+            command: ["/report/scheduler.sh"]
+            volumeMounts:
+              - name: reporting-scripts
+                mountPath: "/report"
+          volumes:
+            - name: reporting-scripts
+              configMap:
+                name: reports-cronjob-configmap
+                defaultMode: 0777

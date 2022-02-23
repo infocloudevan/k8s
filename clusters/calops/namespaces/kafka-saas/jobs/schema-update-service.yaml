@@ -1,0 +1,65 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  labels:
+    job-name: schema-update-service
+  name: schema-update-service
+  namespace: kafka-saas
+spec:
+  backoffLimit: 6
+  completions: 1
+  parallelism: 1
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        job-name: schema-update-service
+    spec:
+      containers:
+      - args:
+        - /hyperdark
+        - --log.verbosity=10
+        - utils
+        - schema-update-service
+        env:
+        - name: HYPERDARK_KAFKA_ENDPOINTS
+          valueFrom:
+            configMapKeyRef:
+              key: kafka-cluster
+              name: endpoints
+        - name: HYPERDARK_CACHE_ENDPOINT
+          valueFrom:
+            configMapKeyRef:
+              key: redis-server
+              name: endpoints
+        - name: HYPERDARK_CACHE_CLUSTER_ENDPOINTS
+          valueFrom:
+            configMapKeyRef:
+              key: redis-cluster
+              name: endpoints
+        - name: HYPERDARK_DB_ENDPOINT
+          valueFrom:
+            secretKeyRef:
+              key: postgres-cluster
+              name: endpoints
+        - name: HYPERDARK_ES_ENDPOINTS
+          valueFrom:
+            configMapKeyRef:
+              key: es-cluster
+              name: endpoints
+        - name: HYPERDARK_ES_CREDENTIALS
+          valueFrom:
+            secretKeyRef:
+              key: creds
+              name: elastic-user
+        image: 078306444420.dkr.ecr.us-east-2.amazonaws.com/darkcubed/hyperdark:125fbaf
+        imagePullPolicy: Always
+        name: updater
+        resources: {}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+      dnsPolicy: ClusterFirst
+      restartPolicy: OnFailure
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30

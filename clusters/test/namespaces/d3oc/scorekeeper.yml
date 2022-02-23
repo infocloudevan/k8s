@@ -1,0 +1,44 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: scorekeeper
+spec:
+  replicas: 1
+  template:
+    metadata:
+      annotations:
+      labels:
+        app: scorekeeper
+    spec:
+      containers:
+      - args:
+        - scorekeeper
+        - --listen-endpoint=0.0.0.0:8080
+        - --elasticsearch-endpoint=https://vpc-test-ni7wpdzcurazpqi5brqrj5aefi.us-east-2.es.amazonaws.com
+        - --elasticsearch-index=d3oc-test
+        - --pubsub-provider=beanstalk
+        - --pubsub-endpoint=queue:11300
+        image: 078306444420.dkr.ecr.us-east-2.amazonaws.com/darkcubed/hyperdark:v25.3
+        imagePullPolicy: IfNotPresent
+        name: scorekeeper
+        ports:
+        - containerPort: 8080
+          name: grpc
+          protocol: TCP
+        resources:
+          requests:
+            cpu: 50m
+            memory: 64Mi
+        terminationMessagePolicy: FallbackToLogsOnError
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: scorekeeper
+spec:
+  ports:
+  - name: grpc
+    port: 8080
+    protocol: TCP
+  selector:
+    app: scorekeeper

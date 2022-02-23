@@ -1,0 +1,48 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: {{APPLIANCE}}-sensor
+  namespace: {{NAMESPACE}}
+spec:
+  replicas: 0
+  template:
+    metadata:
+      labels:
+        app: {{APPLIANCE}}-sensor
+    spec:
+      nodeSelector:
+        appliance: {{APPLIANCE}}
+      imagePullSecrets:
+        - name: quay.io
+      hostNetwork: true
+      containers:
+        - name: bro
+          image: quay.io/darkcubed/bro:v24.0
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: IFACE
+              value: {{IFACE}}
+          volumeMounts:
+            - name: bro-spool
+              mountPath: /opt/bro/spool/bro
+          resources:
+            requests:
+              memory: "2G"
+            limits:
+              memory: "4G"
+        - name: localstash
+          image: quay.io/darkcubed/localstash:v24.0
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: SENSOR_NAME
+              value: {{SENSOR}}
+            - name: {{INPUTS}}
+              value: enabled
+            - name: OUTPUTS_HTTP_URL
+            value: http://127.0.0.1:9997/job
+          volumeMounts:
+            - name: bro-spool
+              mountPath: /usr/local/bro/spool/bro
+      volumes:
+        - name: bro-spool
+          emptyDir: {}

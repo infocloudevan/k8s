@@ -1,0 +1,113 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  annotations:
+    deployment.kubernetes.io/revision: "54"
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"extensions/v1beta1","kind":"Deployment","metadata":{"annotations":{},"labels":{"app":"cleanup-score"},"name":"cleanup-score","namespace":"kafka-saas"},"spec":{"progressDeadlineSeconds":2147483647,"replicas":1,"revisionHistoryLimit":10,"selector":{"matchLabels":{"app":"cleanup-score"}},"strategy":{"rollingUpdate":{"maxSurge":1,"maxUnavailable":1},"type":"RollingUpdate"},"template":{"metadata":{"annotations":{"date":"1583931888"},"creationTimestamp":null,"labels":{"app":"cleanup-score","prom":"monitor"}},"spec":{"containers":[{"args":["/hyperdark","--log.verbosity=8","cleanup","score","--kafka.input-topic=ScoreStream","--kafka.block-output-topic=BlockStream01","--kafka.mute-output-topic=MuteStream01","--blackbox.endpoint=scorecard.prod:8080","--app.min-loop-delay=100ms","--app.max-loop-delay=500ms"],"env":[{"name":"HYPERDARK_KAFKA_ENDPOINTS","valueFrom":{"configMapKeyRef":{"key":"kafka-cluster","name":"endpoints"}}},{"name":"HYPERDARK_CACHE_ENDPOINT","valueFrom":{"configMapKeyRef":{"key":"redis-server","name":"endpoints"}}},{"name":"HYPERDARK_CACHE_CLUSTER_ENDPOINTS","valueFrom":{"configMapKeyRef":{"key":"redis-cluster","name":"endpoints"}}},{"name":"HYPERDARK_DB_ENDPOINT","valueFrom":{"secretKeyRef":{"key":"postgres-cluster","name":"endpoints"}}},{"name":"CLEANUP_SCORE_BLACKBOX_AUTH_TOKEN","valueFrom":{"secretKeyRef":{"key":"bearer-token","name":"scorecard-auth"}}},{"name":"HYPERDARK_ES_ENDPOINTS","valueFrom":{"configMapKeyRef":{"key":"es-cluster","name":"endpoints"}}},{"name":"HYPERDARK_ES_CREDENTIALS","valueFrom":{"secretKeyRef":{"key":"creds","name":"elastic-user"}}}],"image":"078306444420.dkr.ecr.us-east-2.amazonaws.com/darkcubed/hyperdark:125fbaf","imagePullPolicy":"Always","name":"cleanup","ports":[{"containerPort":9102,"name":"metrics","protocol":"TCP"}],"resources":{},"terminationMessagePath":"/dev/termination-log","terminationMessagePolicy":"FallbackToLogsOnError"}],"dnsPolicy":"ClusterFirst","restartPolicy":"Always","schedulerName":"default-scheduler","securityContext":{},"terminationGracePeriodSeconds":30}}}}
+  creationTimestamp: 2019-08-23T23:20:06Z
+  generation: 152
+  labels:
+    app: cleanup-score
+  name: cleanup-score
+  namespace: kafka-saas
+  resourceVersion: "231865921"
+  selfLink: /apis/extensions/v1beta1/namespaces/kafka-saas/deployments/cleanup-score
+  uid: 8b3c64e2-c5fc-11e9-bc71-0a9e36e5582e
+spec:
+  progressDeadlineSeconds: 2147483647
+  replicas: 10
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: cleanup-score
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+    type: RollingUpdate
+  template:
+    metadata:
+      annotations:
+        date: "1583931888"
+      creationTimestamp: null
+      labels:
+        app: cleanup-score
+        prom: monitor
+    spec:
+      containers:
+      - args:
+        - /hyperdark
+        - --log.verbosity=8
+        - cleanup
+        - score
+        - --kafka.input-topic=ScoreStream
+        - --kafka.block-output-topic=BlockStream01
+        - --kafka.mute-output-topic=MuteStream01
+        - --blackbox.endpoint=scorecard.prod:8080
+        - --app.min-loop-delay=100ms
+        - --app.max-loop-delay=500ms
+        env:
+        - name: HYPERDARK_KAFKA_ENDPOINTS
+          valueFrom:
+            configMapKeyRef:
+              key: kafka-cluster
+              name: endpoints
+        - name: HYPERDARK_CACHE_ENDPOINT
+          valueFrom:
+            configMapKeyRef:
+              key: redis-server
+              name: endpoints
+        - name: HYPERDARK_CACHE_CLUSTER_ENDPOINTS
+          valueFrom:
+            configMapKeyRef:
+              key: redis-cluster
+              name: endpoints
+        - name: HYPERDARK_DB_ENDPOINT
+          valueFrom:
+            secretKeyRef:
+              key: postgres-cluster
+              name: endpoints
+        - name: CLEANUP_SCORE_BLACKBOX_AUTH_TOKEN
+          valueFrom:
+            secretKeyRef:
+              key: bearer-token
+              name: scorecard-auth
+        - name: HYPERDARK_ES_ENDPOINTS
+          valueFrom:
+            configMapKeyRef:
+              key: es-cluster
+              name: endpoints
+        - name: HYPERDARK_ES_CREDENTIALS
+          valueFrom:
+            secretKeyRef:
+              key: creds
+              name: elastic-user
+        image: 078306444420.dkr.ecr.us-east-2.amazonaws.com/darkcubed/hyperdark:f2d65ca
+        imagePullPolicy: Always
+        name: cleanup
+        ports:
+        - containerPort: 9102
+          name: metrics
+          protocol: TCP
+        resources: {}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: FallbackToLogsOnError
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
+status:
+  availableReplicas: 10
+  conditions:
+  - lastTransitionTime: 2020-09-15T01:07:05Z
+    lastUpdateTime: 2020-09-15T01:07:05Z
+    message: Deployment has minimum availability.
+    reason: MinimumReplicasAvailable
+    status: "True"
+    type: Available
+  observedGeneration: 152
+  readyReplicas: 10
+  replicas: 10
+  updatedReplicas: 10

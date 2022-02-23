@@ -1,0 +1,37 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  annotations:
+    certmanager.k8s.io/cluster-issuer: letsencrypt-production
+    ingress.kubernetes.io/rewrite-target: /
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"extensions/v1beta1","kind":"Ingress","metadata":{"annotations":{"certmanager.k8s.io/cluster-issuer":"letsencrypt-production","ingress.kubernetes.io/rewrite-target":"/","kubernetes.io/ingress.class":"nginx","kubernetes.io/tls-acme":"true"},"name":"scoreboard-beta","namespace":"kafka-saas"},"spec":{"rules":[{"host":"beta.pathfinder.a.darkcubed.net","http":{"paths":[{"backend":{"serviceName":"scoreboard-beta","servicePort":8080},"path":"/"}]}}],"tls":[{"hosts":["beta.pathfinder.a.darkcubed.net"],"secretName":"scoreboard-beta-app-ingress-tls"}]}}
+    kubernetes.io/ingress.class: nginx
+    kubernetes.io/tls-acme: "true"
+    nginx.ingress.kubernetes.io/auth-tls-secret: kube-system/dod-ca-certs-d3
+    nginx.ingress.kubernetes.io/auth-tls-verify-client: "on"
+    nginx.ingress.kubernetes.io/auth-tls-verify-depth: "1"
+  creationTimestamp: "2019-12-10T20:57:40Z"
+  generation: 1
+  name: scoreboard-beta
+  namespace: kafka-saas
+  resourceVersion: "122380491"
+  selfLink: /apis/extensions/v1beta1/namespaces/kafka-saas/ingresses/scoreboard-beta
+  uid: b403375e-1b8f-11ea-845f-0a9658482414
+spec:
+  rules:
+  - host: beta.pathfinder.a.darkcubed.net
+    http:
+      paths:
+      - backend:
+          serviceName: scoreboard-beta
+          servicePort: 8080
+        path: /
+  tls:
+  - hosts:
+    - beta.pathfinder.a.darkcubed.net
+    secretName: scoreboard-beta-app-ingress-tls
+status:
+  loadBalancer:
+    ingress:
+    - hostname: ad87e25e1b0db11e99cf60248cac6057-559087685.us-gov-west-1.elb.amazonaws.com

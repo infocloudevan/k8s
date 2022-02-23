@@ -1,0 +1,7 @@
+apiVersion: v1
+data:
+  es-cluster: https://22877bb2729a464ab7799cc015d59918.vpce.us-east-2.aws.elastic-cloud.com:9243
+kind: ConfigMap
+metadata:
+  name: endpoints
+  namespace: batch

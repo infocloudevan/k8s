@@ -1,0 +1,16 @@
+apiVersion: certmanager.k8s.io/v1alpha1
+kind: Certificate
+metadata:
+  name: lobster
+  namespace: temp-saas
+spec:
+  acme:
+    config:
+    - dns01:
+        provider: route53-darkcubed-net
+      domains:
+      - lobster.a.darkcubed.net
+  commonName: lobster.a.darkcubed.net
+  issuerRef:
+    name: dns-issuer
+  secretName: lobster-syslog-tls

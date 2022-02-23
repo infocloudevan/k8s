@@ -1,0 +1,80 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: custsupport
+spec:
+  replicas: 0
+  selector:
+    matchLabels:
+      app: custsupport
+  template:
+    metadata:
+      annotations:
+      labels:
+        app: custsupport
+        prom: monitor
+    spec:
+      initContainers:
+      - name: kafka-init
+        image: busybox
+        command: ["sh", "-c", "until nc -v -z -w1 kafka 9092; do sleep 2s; done"]
+      - name: postgres-init
+        image: busybox
+        command: ["sh", "-c", "until nc -v -z -w1 saasdb 5432; do sleep 2s; done"]
+      - name: redis-init
+        image: busybox
+        command: ["sh", "-c", "until nc -v -z -w1 redis-master 6379; do sleep 2s; done"]
+      - name: elastic-search-init
+        image: busybox
+        command: ["sh", "-c", "until nc -v -z -w1 elasticsearch-master 9300; do sleep 2s; done"]
+      containers:
+      - args:
+        - /hyperdark
+        - --log.verbosity=10
+        - cust_support
+        env:
+        - name: HYPERDARK_KAFKA_ENDPOINTS
+          valueFrom:
+            configMapKeyRef:
+              name: endpoints
+              key: kafka-cluster
+        - name: HYPERDARK_CACHE_ENDPOINT
+          valueFrom:
+            configMapKeyRef:
+              name: endpoints
+              key: redis-server
+        - name: HYPERDARK_DB_ENDPOINT
+          valueFrom:
+            configMapKeyRef:
+              name: endpoints
+              key: postgres-cluster
+        - name: HYPERDARK_ES_ENDPOINTS
+          valueFrom:
+            configMapKeyRef:
+              name: endpoints
+              key: es-cluster
+        image: hyperdark
+        ports:
+        - containerPort: 9102
+          name: metrics
+          protocol: TCP
+        imagePullPolicy: Never
+        name: custsupport
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: FallbackToLogsOnError
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: custsupport
+spec:
+  type: ClusterIP
+  #clusterIP: 10.100.0.2
+  ports:
+  - name: http
+    port: 81
+    targetPort: 8081
+    protocol: TCP
+  selector:
+    app: custsupport
+  type: LoadBalancer

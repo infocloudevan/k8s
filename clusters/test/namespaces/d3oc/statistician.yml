@@ -1,0 +1,137 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: statistician
+spec:
+  replicas: 1
+  template:
+    metadata:
+      annotations:
+        prometheus.io/scrape: "true"
+      labels:
+        app: statistician
+    spec:
+      containers:
+      - args:
+        - --env=prod
+        - --log-level=debug
+        - --statsd-endpoint=statsite
+        - worker
+        - --proddb=psql://d3postgresql:oon6ooc4OoviTohp@test-d3oc.cmfxlqcsk74c.us-east-2.rds.amazonaws.com:5432/d3main
+        - --proddb-ro=test-d3oc.cmfxlqcsk74c.us-east-2.rds.amazonaws.com
+        - --beanstalkd-server=queue:11300
+        - --beanstalk-tube=estimate
+        - --elastic-cluster=https://vpc-test-ni7wpdzcurazpqi5brqrj5aefi.us-east-2.es.amazonaws.com
+        - --elastic-score-index=d3oc-test
+        image: 078306444420.dkr.ecr.us-east-2.amazonaws.com/darkcubed/statistician:v25.0
+        imagePullPolicy: IfNotPresent
+        name: statistician
+        ports:
+        - containerPort: 9102
+          name: metrics
+          protocol: TCP
+        resources:
+          requests:
+            cpu: 10m
+            memory: 32Mi
+        terminationMessagePolicy: FallbackToLogsOnError
+      - args:
+        - statistician
+        - --http-endpoint=0.0.0.0:80
+        - --keystore-provider=memcached
+        - --keystore-endpoint=test.jqj9j7.0001.use2.cache.amazonaws.com:11211
+        - --keystore-endpoint=test.jqj9j7.0002.use2.cache.amazonaws.com:11211
+        - --keystore-endpoint=test.jqj9j7.0003.use2.cache.amazonaws.com:11211
+        image: 078306444420.dkr.ecr.us-east-2.amazonaws.com/darkcubed/hyperdark:v25.0
+        imagePullPolicy: IfNotPresent
+        name: sidecar
+        resources:
+          requests:
+            cpu: 10m
+            memory: 32Mi
+        terminationMessagePolicy: FallbackToLogsOnError
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: statistician-dns
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: statistician-dns
+    spec:
+      containers:
+      - args:
+        - --log-level=debug
+        - --statsd-endpoint=statsite
+        - dns
+        - --proddb=psql://d3postgresql:oon6ooc4OoviTohp@test-d3oc.cmfxlqcsk74c.us-east-2.rds.amazonaws.com:5432/d3main
+        - --beanstalkd-server=queue:11300
+        - --beanstalk-tube=dns
+        - --dns-server=4.2.2.2
+        image: 078306444420.dkr.ecr.us-east-2.amazonaws.com/darkcubed/statistician:v25.0
+        imagePullPolicy: IfNotPresent
+        name: statistician-dns
+        resources:
+          requests:
+            cpu: 10m
+            memory: 32Mi
+        terminationMessagePolicy: FallbackToLogsOnError
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: statistician-geo
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: statistician-geo
+    spec:
+      containers:
+      - args:
+        - --log-level=debug
+        - --statsd-endpoint=statsite
+        - geo
+        - --proddb=psql://d3postgresql:oon6ooc4OoviTohp@test-d3oc.cmfxlqcsk74c.us-east-2.rds.amazonaws.com:5432/d3main
+        - --beanstalkd-server=queue:11300
+        - --beanstalk-tube=geoip
+        image: 078306444420.dkr.ecr.us-east-2.amazonaws.com/darkcubed/statistician:v25.0
+        imagePullPolicy: IfNotPresent
+        name: statistician-geo
+        resources:
+          requests:
+            cpu: 10m
+            memory: 128Mi
+        terminationMessagePolicy: FallbackToLogsOnError
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: statistician-whois
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: statistician-whois
+    spec:
+      containers:
+      - args:
+        - --log-level=debug
+        - --statsd-endpoint=statsite
+        - whois
+        - --proddb=psql://d3postgresql:oon6ooc4OoviTohp@test-d3oc.cmfxlqcsk74c.us-east-2.rds.amazonaws.com:5432/d3main
+        - --beanstalkd-server=queue:11300
+        - --beanstalk-tube=whois
+        image: 078306444420.dkr.ecr.us-east-2.amazonaws.com/darkcubed/statistician:v25.0
+        imagePullPolicy: IfNotPresent
+        name: statistician-whois
+        resources:
+          requests:
+            cpu: 10m
+            memory: 32Mi
+        terminationMessagePolicy: FallbackToLogsOnError

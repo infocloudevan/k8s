@@ -1,0 +1,251 @@
+#cloud-config
+---
+ssh_authorized_keys:
+  - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMlwf1byEx1Zoz9SPXtV8Xo+IT9N9Dde4mjoWpjCSwFC admin@darkcubed
+  - cert-authority ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIExnk7/s7lD8X99hT0CZBQwzS39Pf1xM21AX/Pb50bY0 ca@darkcubed
+write-files:
+  - path: /etc/hosts
+    permissions: '0644'
+    content: |
+      127.0.0.1     localhost {{APPLIANCE}}
+  - path: /opt/bin/wur
+    permissions: '0755'
+    content: |
+      #!/bin/bash
+      # [w]ait [u]ntil [r]outable
+      [ -n "$1" ] && \
+        until ip route get ${1} > /dev/null 2>&1; do sleep 5; echo "waiting on route..."; done;
+      exit $?
+  - path: /opt/darkcubed/status-timer
+    permissions: '0644'
+    content: |
+      0
+  - path: /opt/darkcubed/status-timer-monitor
+    permissions: '0755'
+    content: |
+      #!/bin/bash
+      now=$(date +%s)
+      updated=$(cat /opt/darkcubed/status-timer)
+      if [ $updated -eq "0" ]; then
+        echo $now > /opt/darkcubed/status-timer
+        updated=$now
+      fi
+      since=$((now - updated))
+      if [ $since -gt 900 ]; then
+        echo "No successful update in 15 minutes - rebooting..."
+        reboot
+      else
+        echo "Successfully updated within the last 15 minutes - no need to reboot..."
+      fi
+  - path: /opt/darkcubed/status-update
+    permissions: '0755'
+    content: |
+      #!/bin/bash
+      while true; do
+        iface=$(ip route get 8.8.8.8 | awk '{print $5}')
+        ipaddr=$(ip route get 8.8.8.8 | awk '{print $7}')
+        mac=$(ip addr | grep -B 1 $ipaddr | awk '{print $2}' | head -1)
+        ntp=$(systemctl status systemd-timesyncd | grep Status | awk '{print $2}' | sed 's/"//g' | sed 's/\.//')
+        disk=$(df -h | grep /dev/sda9 | awk '{print $5}')
+        updated=$(date +%s)
+        rebooted=$(date -d "$(cut -f1 -d. /proc/uptime) seconds ago" +%s)
+        res=$(curl -sw "%{response_code}" \
+          -X PUT \
+          -H "Content-Type: application/json" \
+          -H "Authorization: Bearer {{CUSTOMER_TOKEN}}" \
+          -d '{"apiVersion":"appliance.darkcubed.io/v1","kind":"CurrentStatus","metadata":{"name":"{{APPLIANCE}}","namespace":"{{NAMESPACE}}"},"spec":{"cloudConfig":"v1.9.2-0","netIface":"'$iface'","netIp":"'$ipaddr'","netMac":"'$mac'","netTime":"'$ntp'","diskUsage":"'$disk'","updated":"'$updated'","rebooted":"'$rebooted'"}}' \
+          https://status.a.darkcubed.net)
+
+        status="${res:${#res}-3}"
+
+        if [ $status -eq "200" ]; then
+          echo "[status:$status] received new cloud config - persisting and rebooting..."
+          body="${res:0:${#res}-3}"
+          echo "$body" > /var/lib/coreos-install/user_data
+          echo "$updated" > /opt/darkcubed/status-timer
+          reboot
+        elif [ $status -eq "204" ]; then
+          echo "[status:$status] nothing to do"
+          echo "$updated" > /opt/darkcubed/status-timer
+        elif [ $status -eq "275" ]; then
+          echo "[status:$status] received reboot request -- rebooting..."
+          echo "$updated" > /opt/darkcubed/status-timer
+          reboot
+        else
+          body="${res:0:${#res}-3}"
+          echo "[status:$status] $body"
+        fi
+
+        sleep 300
+      done
+  - path: /etc/kubernetes/ca.pem
+    permissions: '0600'
+    content: |
+      -----BEGIN CERTIFICATE-----
+      MIICyDCCAbCgAwIBAgIBADANBgkqhkiG9w0BAQsFADAVMRMwEQYDVQQDEwprdWJl
+      cm5ldGVzMB4XDTE4MDIwMjAzNTQxNVoXDTI4MDEzMTAzNTQxNVowFTETMBEGA1UE
+      AxMKa3ViZXJuZXRlczCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBANMp
+      1vXK/dxL8+mXTFGI/4fBDqcSq92gYWyl5zINC/q1KV99U03pMsQE16+dB50s3+Jq
+      AU/eoApAGZKgo1mh9MsTy2M86ZA6FKDytMsH7BoQ9jPjXMp6ee75MaBdgZqFteCz
+      DTotKuicHycmzgAwdfViHL1FL4b8KLwYS6vPjRs+BIFDExAdIdnW2zymkY7AFEq7
+      HpQP/LyPPfbGUjzZOf1YUbw9g59guUY6bhPmqFkt+ISJ7NuqOk2DREy06RPVIWZs
+      JJ1a1LfzpEt1bOcDSCkjdthkg6DVTNgaWFCvCL7q1eW38LdnkaViL08ebOmNSHxZ
+      kXp45fo8ZUGugcRCjIMCAwEAAaMjMCEwDgYDVR0PAQH/BAQDAgKkMA8GA1UdEwEB
+      /wQFMAMBAf8wDQYJKoZIhvcNAQELBQADggEBAIuoB+OB5IfmKe+05t6AJkqOdk3a
+      6E/bxBcEnEcNkY/4ktoOVYX7p0r6BLug0zXifBamzP5bvLhnuIfew0yFw8QhYgnn
+      I9kj3Frk8lFaB2CbYxlxdw3J/a29sqkiYOF5QL3DSsOJyq/X/PPKWSMmjXRauvyd
+      abz3xfu2JPTDkhxMa2upnyiGUPAfFDahPyk+lruYZ9aRG5/FVt2rf/rzSPWp+w+c
+      nbWPu0lt5TKwEjkrsYDED2o8JXzKWWKHg6TvGHxf1Q4gpMwNjEQ+mOYGaC/uGZql
+      0ceJzbmOGduNo5NaxWBDfusUcI/SV2I4sDBC+/0/KRULOYszwPW6d/xmQZs=
+      -----END CERTIFICATE-----
+  - path: /etc/kubernetes/bootstrap-kubeconfig.yml
+    permissions: '0600'
+    content: |
+      apiVersion: v1
+      kind: Config
+      clusters:
+      - name: default
+        cluster:
+          server: https://bacon.a.darkcubed.net
+          certificate-authority: /etc/kubernetes/ca.pem
+      users:
+      - name: default
+        user:
+          token: c7d62d.7a33e2e4d4148831
+      contexts:
+      - context:
+          cluster: default
+          user: default
+        name: default
+      current-context: default
+  - path: /var/lib/iptables/rules-save
+    permissions: '0600'
+    content: |
+      *filter
+      :INPUT DROP [0:0]
+      :FORWARD DROP [0:0]
+      :OUTPUT ACCEPT [0:0]
+      -N DOCKER
+      -A INPUT -i lo -j ACCEPT
+      -A INPUT -i docker0 -j ACCEPT
+      -A INPUT -m state --state RELATED,ESTABLISHED -j ACCEPT
+      -A INPUT -p tcp -m tcp --dport 22  -j ACCEPT
+      -A INPUT -p tcp -m tcp --dport 80  -j ACCEPT
+      -A INPUT -p tcp -m tcp --dport 443 -j ACCEPT
+      -A INPUT -p tcp -m tcp --dport 9997 -j ACCEPT
+      -A INPUT -p tcp -m tcp --dport 9999 -j ACCEPT
+      -A INPUT -p icmp -m icmp --icmp-type 0 -j ACCEPT
+      -A INPUT -p icmp -m icmp --icmp-type 8 -j ACCEPT
+      -A FORWARD -o docker0 -j DOCKER
+      -A FORWARD -o docker0 -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+      -A FORWARD -i docker0 ! -o docker0 -j ACCEPT
+      -A FORWARD -i docker0 -o docker0 -j ACCEPT
+      -A FORWARD -p all -i bridge -j ACCEPT
+      COMMIT
+hostname: "{{APPLIANCE}}"
+coreos:
+  units:
+    - name: etcd2.service
+      mask: true
+    - name: fleet.service
+      mask: true
+    - name: iptables-restore.service
+      command: start
+    - name: docker.service
+      command: start
+      drop-ins:
+        - name: 60-log-rotate.conf
+          content: |
+            [Service]
+            Environment="DOCKER_OPTS=--log-driver=json-file --log-opt max-size=5m --log-opt max-file=1"
+    - name: kubelet.service
+      command: start
+      content: |
+        [Unit]
+        Description=Kubernetes Kubelet
+        Requires=network-online.target
+        After=network-online.target
+        [Service]
+        ExecStartPre=/usr/bin/mkdir -p /opt/bin
+        ExecStartPre=-/usr/bin/curl -s -L -o /opt/bin/kubelet -z /opt/bin/kubelet https://storage.googleapis.com/kubernetes-release/release/v1.9.2/bin/linux/amd64/kubelet
+        ExecStartPre=/usr/bin/chmod +x /opt/bin/kubelet
+        ExecStartPre=/opt/bin/wur 8.8.8.8
+        ExecStart=/opt/bin/kubelet \
+          --bootstrap-kubeconfig=/etc/kubernetes/bootstrap-kubeconfig.yml \
+          --kubeconfig=/etc/kubernetes/kubeconfig.yml \
+          --host-network-sources="*" \
+          --register-node=false \
+          --enable-server=false \
+          --read-only-port=0 \
+          --cadvisor-port=0 \
+          --healthz-port=0
+        TimeoutStartSec=300
+        Restart=always
+        RestartSec=10
+        [Install]
+        WantedBy=multi-user.target
+    - name: downsample-counts.service
+      content: |
+        [Unit]
+        Description=Downsample threat counts in UIDB
+        Requires=docker.service
+        After=docker.service
+        [Service]
+        Type=oneshot
+        StandardInput=tty-force
+        ExecStart=/usr/bin/sh -c "/usr/bin/docker exec -it $(docker ps | grep uidb | awk '{print $1}') gosu postgres psql -c 'select downsample_counts()' dark3"
+    - name: downsample-counts.timer
+      command: start
+      content: |
+        [Unit]
+        Description=Run downsample-counts.service on the 1st of each month
+        [Timer]
+        ; this will cause the timer to be run on the 1st day of each month at midnight
+        OnCalendar=monthly
+        RandomizedDelaySec=60
+    - name: postgres-dump.service
+      content: | 
+        [Unit]
+        Description=Trigger automated postgres dump
+        [Service]
+        Type=oneshot
+        ExecStart=/usr/bin/sh -c "/usr/bin/docker exec $(docker ps | grep uidb | awk '{print $1}') /bin/sh -c 'gosu postgres pg_dump dark3 | gzip > /var/lib/postgresql/data/pg-dump.sql.gz'"
+    - name: postgres-dump.timer
+      command: start
+      content: |
+        [Unit]
+        Description=Run postgres-dump.service every six hours
+        [Timer]
+        ; this will cause the timer to be run every six hours
+        OnCalendar=0/6:00:00
+    - name: status-timer-monitor.timer
+      command: start
+      content: |
+        [Unit]
+        Description=Run status-timer-monitor.service every 15 minutes
+        [Timer]
+        ; this will cause the timer to be run every 15 minutes
+        OnCalendar=*:0,15,30,45
+    - name: status-timer-monitor.service
+      command: start
+      content: |
+        [Unit]
+        Description=Dead-man switch
+        [Service]
+        ExecStart=/opt/darkcubed/status-timer-monitor
+        Type=oneshot
+    - name: darkcubed-status-update.service
+      command: start
+      content: |
+        [Unit]
+        Description=Detect and report Dark Cubed updates
+        Requires=network-online.target
+        After=network-online.target
+        [Service]
+        ExecStart=/opt/darkcubed/status-update
+        Restart=always
+        [Install]
+        WantedBy=multi-user.target
+  update:
+    group: stable
+    reboot-strategy: reboot

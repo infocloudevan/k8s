@@ -1,0 +1,35 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: saas-db-vacuum
+  namespace: temp-saas
+spec:
+  concurrencyPolicy: Forbid
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - args:
+            - /bin/sh
+            - -c
+            - echo $(PGPASS) > .pgpass && chmod 600 .pgpass && vacuumdb -h $(DB_HOST) -U dark3 -W --analyze -j 10 dark3
+            env:
+            - name: PGPASS
+              valueFrom: 
+                secretKeyRef:
+                  name: saas-db-credentials
+                  key: pgpass
+            - name: DB_HOST
+              value: temp-prod-saas.cmfxlqcsk74c.us-east-2.rds.amazonaws.com
+            image: activeshadow/psql-cli
+            imagePullPolicy: IfNotPresent
+            name: saas-db-vacuum
+            resources: {}
+            terminationMessagePath: /dev/termination-log
+            terminationMessagePolicy: FallbackToLogsOnError
+          restartPolicy: OnFailure
+  schedule: 0 9 * * *
+  successfulJobsHistoryLimit: 0
+  suspend: false

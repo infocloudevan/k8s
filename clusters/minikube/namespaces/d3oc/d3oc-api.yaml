@@ -1,0 +1,87 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: d3oc-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: d3oc-api
+  template:
+    metadata:
+      labels:
+        app: d3oc-api
+    spec:
+      containers:
+        - args:
+            - /hyperdark
+            - --log.verbosity=10
+            - d3oc
+            - scorecard
+            - --app.listen-endpoint=0.0.0.0:8080
+            - --app.pathfinder-endpoint=pathfinder.d3oc.svc:8080
+            - --app.beanstalk-endpoint=beanstalkd.d3oc.svc:11300
+            - --keystore.provider=redis
+            - --keystore.endpoint=redis-master.default.svc:6379
+          env:
+            - name: SCORECARD_AUTH_TOKEN_SECRET
+              valueFrom:
+                secretKeyRef:
+                  key: jwt-secret-key
+                  name: scorecard-auth
+            - name: KAFKA_ENDPOINTS
+              valueFrom:
+                configMapKeyRef:
+                  name: endpoints
+                  key: kafka-cluster
+            - name: D3OC_DB_ENDPOINT
+              valueFrom:
+                configMapKeyRef:
+                  name: endpoints
+                  key: d3oc-db
+            - name: D3OC_PUBSUB_ENDPOINT
+              valueFrom:
+                configMapKeyRef:
+                  name: endpoints
+                  key: d3oc-pubsub
+            # - name: CACHE_ENDPOINT
+            #   valueFrom:
+            #     configMapKeyRef:
+            #       name: endpoints
+            #       key: memcached-server
+          image: hyperdark
+          imagePullPolicy: Never
+          name: d3oc-api
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "250m"
+            limits:
+              memory: "128Mi"
+              cpu: "500m"
+          ports:
+            - containerPort: 8080
+              name: grpc
+              protocol: TCP
+            - containerPort: 9102
+              name: metrics
+              protocol: TCP
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: FallbackToLogsOnError
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    prom: monitor
+  name: d3oc-api
+spec:
+  ports:
+    - name: grpc
+      port: 8080
+      protocol: TCP
+    - name: metrics
+      port: 9102
+      protocol: TCP
+  selector:
+    app: d3oc-api

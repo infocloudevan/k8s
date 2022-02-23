@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pathfinder
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pathfinder
+  template:
+    metadata:
+      labels:
+        app: pathfinder 
+    spec:
+      containers:
+      - args:
+        - /hyperdark
+        - d3oc
+        - pathfinder
+        - --app.listen-endpoint=0.0.0.0:8080
+        - --app.algorithm=none
+        env:
+        - name: PATHFINDER_DB_ENDPOINT
+          valueFrom:
+            secretKeyRef:
+              key: endpoint
+              name: dcise-db
+        image: 078306444420.dkr.ecr.us-east-2.amazonaws.com/darkcubed/hyperdark:{TAG}
+        imagePullPolicy: Always
+        name: scorecard
+        ports:
+        - containerPort: 8080
+          name: grpc
+          protocol: TCP
+        - containerPort: 9102
+          name: metrics
+          protocol: TCP
+        resources:
+          requests:
+            cpu: 500m
+            memory: 32Mi
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: FallbackToLogsOnError
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    prom: monitor
+  name: pathfinder
+spec:
+  ports:
+  - name: grpc
+    port: 8080
+    protocol: TCP
+    targetPort: 8080
+  - name: metrics
+    port: 9102
+    protocol: TCP
+    targetPort: 9102
+  selector:
+    app: pathfinder

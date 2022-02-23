@@ -1,0 +1,8 @@
+apiVersion: v1
+data:
+  redis.conf: |
+    maxmemory 512MB
+kind: ConfigMap
+metadata:
+  name: appliance-redis-config
+  namespace: {{NAMESPACE}}

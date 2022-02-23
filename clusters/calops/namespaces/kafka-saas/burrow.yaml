@@ -1,0 +1,78 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  annotations:
+    deployment.kubernetes.io/revision: "5"
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"extensions/v1beta1","kind":"Deployment","metadata":{"annotations":{},"name":"burrow","namespace":"kafka-saas"},"spec":{"replicas":1,"template":{"metadata":{"annotations":null,"labels":{"app":"burrow","prom":"monitor"}},"spec":{"containers":[{"image":"078306444420.dkr.ecr.us-east-2.amazonaws.com/darkcubed/burrow","imagePullPolicy":"Always","name":"burrow","terminationMessagePath":"/dev/termination-log","terminationMessagePolicy":"FallbackToLogsOnError","volumeMounts":[{"mountPath":"/etc/burrow","name":"config"}]},{"args":["--collector.disabled-metrics=\"consumer-status,partition-current-offset,partition-lag,partition-max-offset,partition-status,topic-partition-offset\""],"image":"078306444420.dkr.ecr.us-east-2.amazonaws.com/darkcubed/burrow-exporter","imagePullPolicy":"Always","name":"exporter","ports":[{"containerPort":8237,"name":"metrics","protocol":"TCP"}],"terminationMessagePath":"/dev/termination-log","terminationMessagePolicy":"FallbackToLogsOnError"}],"volumes":[{"configMap":{"name":"burrow"},"name":"config"}]}}}}
+  creationTimestamp: 2019-09-12T21:34:59Z
+  generation: 6
+  labels:
+    app: burrow
+    prom: monitor
+  name: burrow
+  namespace: kafka-saas
+  resourceVersion: "105201297"
+  selfLink: /apis/extensions/v1beta1/namespaces/kafka-saas/deployments/burrow
+  uid: 2bc16a3b-d5a5-11e9-b7e4-02c6bb02f104
+spec:
+  progressDeadlineSeconds: 2147483647
+  replicas: 0
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: burrow
+      prom: monitor
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+    type: RollingUpdate
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: burrow
+        prom: monitor
+    spec:
+      containers:
+      - image: 078306444420.dkr.ecr.us-east-2.amazonaws.com/darkcubed/burrow
+        imagePullPolicy: Always
+        name: burrow
+        resources: {}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: FallbackToLogsOnError
+        volumeMounts:
+        - mountPath: /etc/burrow
+          name: config
+      - args:
+        - --collector.disabled-metrics="consumer-status,partition-current-offset,partition-lag,partition-max-offset,partition-status,topic-partition-offset"
+        image: 078306444420.dkr.ecr.us-east-2.amazonaws.com/darkcubed/burrow-exporter
+        imagePullPolicy: Always
+        name: exporter
+        ports:
+        - containerPort: 8237
+          name: metrics
+          protocol: TCP
+        resources: {}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: FallbackToLogsOnError
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
+      volumes:
+      - configMap:
+          defaultMode: 420
+          name: burrow
+        name: config
+status:
+  conditions:
+  - lastTransitionTime: 2019-09-12T21:34:59Z
+    lastUpdateTime: 2019-09-12T21:34:59Z
+    message: Deployment has minimum availability.
+    reason: MinimumReplicasAvailable
+    status: "True"
+    type: Available
+  observedGeneration: 6

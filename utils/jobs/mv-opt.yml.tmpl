@@ -1,0 +1,29 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: mv-opt-{{APPLIANCE}}
+  namespace: {{NAMESPACE}}
+spec:
+  template:
+    metadata:
+      name: mv-opt-{{APPLIANCE}}
+    spec:
+      nodeSelector:
+        appliance: {{APPLIANCE}}
+      containers:
+        - name: mv-opt-{{APPLIANCE}}
+          image: busybox
+          command: ["sh", "/tmp/moving.sh"]
+          volumeMounts:
+            - name: tmp-opt
+              mountPath: /tmp/opt
+            - name: moving-secret
+              mountPath: /tmp
+      restartPolicy: Never
+      volumes:
+        - name: tmp-opt
+          hostPath:
+            path: /opt
+        - name: moving-secret
+          secret:
+            secretName: moving-secret        

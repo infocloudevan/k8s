@@ -1,0 +1,25 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: http-source-{{APPLIANCE}}
+  namespace: {{NAMESPACE}}
+spec:
+  template:
+    metadata:
+      name: http-source-{{APPLIANCE}}
+    spec:
+      nodeSelector:
+        appliance: {{APPLIANCE}}
+      hostNetwork: true
+      containers:
+        - name: http-source-{{APPLIANCE}}
+          image: ruby:2.3-alpine
+          args: ["ruby", "-run", "-e", "httpd", "/tmp/home/core", "-p", "80"]
+          volumeMounts:
+            - name: home-tmp
+              mountPath: /tmp/home/core
+      restartPolicy: Never
+      volumes:
+        - name: home-tmp
+          hostPath:
+            path: /home/core

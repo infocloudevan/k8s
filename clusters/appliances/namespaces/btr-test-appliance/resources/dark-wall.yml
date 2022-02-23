@@ -1,0 +1,30 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: dark-wall
+spec:
+  replicas: 0
+  template:
+    metadata:
+      labels:
+        app: dark-wall
+    spec:
+      containers:
+      - args:
+        - dark-wall
+        - http://localhost:9102
+        - "10"
+        image: quay.io/darkcubed/dark-wall:v0.0.0
+        imagePullPolicy: Always
+        name: firewall
+        securityContext:
+          capabilities:
+            add:
+            - "NET_ADMIN"
+            - "NET_RAW"
+        terminationMessagePolicy: FallbackToLogsOnError
+      hostNetwork: true
+      imagePullSecrets:
+      - name: quay.io
+      nodeSelector:
+        appliance: btr-test-appliance

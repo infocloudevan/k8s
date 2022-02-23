@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cleanup-sync
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cleanup-sync
+  template:
+    metadata:
+      annotations:
+      labels:
+        app: cleanup-sync
+        prom: monitor
+    spec:
+      containers:
+      - args:
+        - /hyperdark
+        - --log.verbosity=10
+        - cleanup
+        - sync
+        - --blackbox.endpoint=d3oc-api.d3oc.svc:8080
+        - --blackbox.mode=grpc
+        env:
+        - name: HYPERDARK_CACHE_ENDPOINT
+          valueFrom:
+            configMapKeyRef:
+              name: endpoints
+              key: redis-server
+        - name: HYPERDARK_DB_ENDPOINT
+          valueFrom:
+            configMapKeyRef:
+              name: endpoints
+              key: postgres-cluster
+
+        - name: CLEANUP_SCORE_BLACKBOX_AUTH_TOKEN
+          value: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJjb21tZXJjaWFsIiwic3ZjcyI6ImNvbW1lcmNpYWwifQ.19GMwyPzjYGEb77T_1hOxzGx7UDtsRTu9juGL_qMhcQ
+        image: hyperdark
+        ports:
+        - containerPort: 9102
+          name: metrics
+          protocol: TCP
+        imagePullPolicy: Never
+        name: cleanup
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: FallbackToLogsOnError

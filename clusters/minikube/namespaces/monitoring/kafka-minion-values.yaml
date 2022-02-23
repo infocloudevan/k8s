@@ -1,0 +1,2 @@
+kafka:
+  brokers: "d3-kafka.default.svc:9092"

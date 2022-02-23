@@ -1,0 +1,12 @@
+apiVersion: kafka.strimzi.io/v1beta1
+kind: KafkaTopic
+metadata:
+  labels:
+    strimzi.io/cluster: kafka
+  name: block-doc
+spec:
+  config:
+    cleanup.policy: delete
+  partitions: 1
+  replicas: 2
+  topicName: BlockDocStream

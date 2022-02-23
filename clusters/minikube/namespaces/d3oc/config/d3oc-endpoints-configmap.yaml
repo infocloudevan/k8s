@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: endpoints
+data:
+  kafka-cluster: kafka.default.svc:9092
+  d3oc-db: postgres://dark3:dark3@saasdb.default.svc:5432/d3oc
+  pathfinder-db: postgres://dark3:dark3@saasdb.default.svc:5432/pathfinder
+  memcached-server: redis-master.default.svc:6379
+  d3oc-pubsub: redis-master.default.svc:6379
+  d3oc-beanstalkd: beanstalkd.d3oc.svc:11300
+  # redis-server: redis-master:6379

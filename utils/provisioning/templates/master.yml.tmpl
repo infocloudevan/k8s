@@ -1,0 +1,153 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: {{APPLIANCE}}
+  namespace: {{NAMESPACE}}
+spec:
+  replicas: 0
+  template:
+    metadata:
+      labels:
+        app: {{APPLIANCE}}
+    spec:
+      nodeSelector:
+        appliance: {{APPLIANCE}}
+      imagePullSecrets:
+        - name: quay.io
+      hostNetwork: true
+      containers:
+        - name: beanstalk
+          image: activeshadow/beanstalkd
+          imagePullPolicy: IfNotPresent
+          args:
+            - beanstalkd
+            - -l
+            - "127.0.0.1"
+            - -p
+            - "11300"
+            - -b
+            - /var/lib/beanstalk/binlog
+          ports:
+            - containerPort: 11300
+              hostPort: 11300
+          volumeMounts:
+            - name: beanstalk-binlog
+              mountPath: /var/lib/beanstalk/binlog
+        - name: uidb
+          image: quay.io/darkcubed/uidb:v24.1
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 5432
+              hostPort: 5432
+          volumeMounts:
+            - name: postgresdata
+              mountPath: /var/lib/postgresql/data
+        - name: scoreboard
+          image: quay.io/darkcubed/hyperdark:v24.0
+          imagePullPolicy: IfNotPresent
+          args:
+            - --log-level=debug
+            - scoreboard
+            - --env=production
+            - --feature-flag-notifications=true
+            - --feature-flag-threat-blocking=true
+            - --blocklist-only
+            - --feature-flag-reporting=false
+            - --settings-path=/var/scoreboard/settings:/opt/etc/scoreboard/settings
+            - --insecure-endpoint=0.0.0.0:80
+            - --secure-endpoint=0.0.0.0:443
+            - --pubsub-provider=beanstalk
+            - --pubsub-endpoint=127.0.0.1:11300
+          ports:
+            - containerPort: 80
+              hostPort: 80
+            - containerPort: 443
+              hostPort: 443
+          volumeMounts:
+            - name: scoreboard-settings
+              mountPath: /opt/etc/scoreboard
+            - name: scoreboard-secrets
+              mountPath: /var/scoreboard
+        - name: coach
+          image: quay.io/darkcubed/hyperdark:v24.0
+          imagePullPolicy: IfNotPresent
+          args:
+            - --log-level=debug
+            - coach
+            - --http-endpoint=127.0.0.1:9997
+            - --pubsub-provider=beanstalk
+            - --pubsub-endpoint=127.0.0.1:11300
+          ports:
+            - containerPort: 9997
+              hostPort: 9997
+        - name: groundskeeper
+          image: quay.io/darkcubed/hyperdark:v24.0
+          imagePullPolicy: IfNotPresent
+          args:
+            - --log-level=debug
+            - groundskeeper
+            - --sleep=10s
+            - --tube=query
+            - --tube=write
+          env:
+            - name: HOST_PROC
+              value: /rootfs/proc
+          ports:
+            - containerPort: 9990
+              hostPort: 9990
+          volumeMounts:
+            - name: host-root
+              mountPath: /rootfs
+              readOnly: true
+        - name: statsite
+          image: quay.io/darkcubed/statsite:v24.0
+          imagePullPolicy: IfNotPresent
+          args:
+            - statsite
+            - -f
+            - /etc/statsite.blackbox.conf
+          ports:
+            - containerPort: 8125
+              hostPort: 8125
+              protocol: UDP
+          env:
+            - name: BLACKBOX_TIMEOUT
+              value: 5s
+            - name: CUSTOMER_ID
+              value: {{APPLIANCE}}
+            - name: K8S_NAMESPACE
+              value: default
+            - name: BLACKBOX_ENDPOINT
+              value: https://prod.deception.a.darkcubed.net
+        - name: redis
+          image: redis:alpine
+          imagePullPolicy: IfNotPresent
+          args:
+            - redis-server
+            - /data/redis.conf
+          ports:
+            - containerPort: 6379
+              hostPort: 6379
+          volumeMounts:
+            - mountPath: /data
+              name: redis-config
+      terminationGracePeriodSeconds: 600
+      volumes:
+        - name: beanstalk-binlog
+          hostPath:
+            path: /opt/darkcubed/beanstalk
+        - name: postgresdata
+          hostPath:
+            path: /opt/darkcubed/postgres
+        - name: scoreboard-settings
+          hostPath:
+            path: /opt/darkcubed/scoreboard
+        - name: host-root
+          hostPath:
+            path: /
+        - name: scoreboard-secrets
+          secret:
+            secretName: {{APPLIANCE}}-scoreboard-config
+        - name: redis-config
+          configMap:
+            name: appliance-redis-config

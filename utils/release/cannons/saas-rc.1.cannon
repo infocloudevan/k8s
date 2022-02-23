@@ -1,0 +1,9 @@
+# Add term to be replaced by term separated by a tab.
+# Example: v1.0<tab>v2.0
+
+saas-rc.0	saas-rc.1
+
+postgres://dark3@uidb:5432/dark3?sslmode=disable	postgres://dark3:Qv8CYJfKDYR7PNed@saas-testing.cmfxlqcsk74c.us-east-2.rds.amazonaws.com:5432/dark3
+
+# --beanstalk=queue:11300	--pubsub-provider=beanstalk\r        - --pubsub-endpoint=queue:11300
+redis=uidb:6379	redis=saas-cache-redis:6379

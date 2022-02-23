@@ -1,0 +1,99 @@
+apiVersion: v1
+data:
+  disk-usage-agent.properties: |
+    disk.data=/mnt/data/data0
+    service.name=kafka
+  jvm.config: |
+    -Xmx4G
+    -Xms4G
+
+    -verbose:gc
+    -XX:+PrintGCDetails
+    -XX:+PrintGCDateStamps
+    -XX:+PrintGCTimeStamps
+    -XX:+UseGCLogFileRotation
+    -XX:NumberOfGCLogFiles=10
+    -XX:GCLogFileSize=100M
+
+    -server
+    -XX:MetaspaceSize=96m
+    -XX:+UseG1GC
+    -XX:MaxGCPauseMillis=20
+    -XX:InitiatingHeapOccupancyPercent=35
+    -XX:+ExplicitGCInvokesConcurrent
+    -XX:G1HeapRegionSize=16
+    -XX:MinMetaspaceFreeRatio=50
+    -XX:MaxMetaspaceFreeRatio=80
+    -Djava.awt.headless=true
+
+    -XX:ParallelGCThreads=1
+    -XX:ConcGCThreads=1
+
+    -Dcom.sun.management.jmxremote=true
+    -Dcom.sun.management.jmxremote.authenticate=false
+    -Dcom.sun.management.jmxremote.ssl=false
+    -Dcom.sun.management.jmxremote.local.only=false
+    -Dcom.sun.management.jmxremote.rmi.port=7203
+    -Dcom.sun.management.jmxremote.port=7203
+
+    -XX:+PrintFlagsFinal
+    -XX:+UnlockDiagnosticVMOptions
+  log4j.properties: |
+    log4j.appender.stdout=org.apache.log4j.ConsoleAppender
+    log4j.appender.stdout.layout=org.apache.log4j.EnhancedPatternLayout
+    log4j.appender.stdout.layout.ConversionPattern=[%p] %d [%t] %c %M - %m%n
+
+    log4j.rootLogger=INFO, stdout
+  server-common.properties: |+
+    auto.create.topics.enable=false
+    default.replication.factor=3
+    delete.topic.enable=true
+    inter.broker.listener.name=REPLICATION
+    listener.security.protocol.map=INTERNAL:SASL_PLAINTEXT,REPLICATION:SASL_PLAINTEXT,EXTERNAL:SASL_PLAINTEXT
+    listeners=INTERNAL://:9071,REPLICATION://:9072,EXTERNAL://:9092
+    log.dirs=/mnt/data/data0/logs
+    message.max.bytes=2097164
+    min.insync.replicas=2
+    num.network.threads=4
+    offsets.retention.minutes=10080
+    offsets.topic.compression.codec=3
+    offsets.topic.replication.factor=3
+    offsets.commit.timeout.ms=15000
+    replica.lag.time.max.ms=15000
+    sasl.enabled.mechanisms=PLAIN
+    sasl.mechanism.inter.broker.protocol=PLAIN
+    transaction.state.log.min.isr=2
+    transaction.state.log.replication.factor=3
+    zookeeper.connect=zookeeper.kafka-saas.svc.cluster.local:2181/kafka-kafka-saas
+    zookeeper.session.timeout.ms=22500
+    ssl.keystore.location=/tmp/keystore.jks
+    ssl.keystore.password=mystorepassword
+    ssl.key.password=mystorepassword
+    inter.broker.protocol.version=2.3
+    log.message.format.version=2.3
+    group.max.session.timeout.ms=1200000
+
+    metric.reporters=io.confluent.metrics.reporter.ConfluentMetricsReporter
+    confluent.metrics.reporter.bootstrap.servers=kafka:9071
+    confluent.metrics.reporter.topic.replicas=3
+    confluent.metrics.reporter.publish.ms=30000
+    confluent.metrics.reporter.sasl.mechanism=PLAIN
+    confluent.metrics.reporter.sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username=test password=test123;
+    confluent.metrics.reporter.security.protocol=SASL_PLAINTEXT
+
+  server_jaas.conf: |
+    KafkaServer {
+      io.confluent.kafka.server.plugins.auth.FileBasedLoginModule required
+      username=test
+      password=test123
+      config_path="/mnt/secrets/apikeys.json"
+      refresh_ms="30000";
+    };
+kind: ConfigMap
+metadata:
+  creationTimestamp: "2019-08-20T04:31:42Z"
+  name: kafka-shared-config
+  namespace: kafka-saas
+  resourceVersion: "6101706"
+  selfLink: /api/v1/namespaces/kafka-saas/configmaps/kafka-shared-config
+  uid: 6930c208-c303-11e9-845f-0a9658482414

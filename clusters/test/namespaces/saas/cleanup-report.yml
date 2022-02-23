@@ -1,0 +1,48 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: cleanup-report
+spec:
+  replicas: 1
+  template:
+    metadata:
+      annotations:
+      labels:
+        app: cleanup-report
+        prom: monitor
+    spec:
+      containers:
+      - args:
+        - /cleanup
+        - --log.verbosity=10
+        - report
+        env:
+        - name: CLEANUP_REPORT_KAFKA_ENDPOINTS
+          valueFrom: 
+            configMapKeyRef:
+              name: endpoints
+              key: kafka-cluster
+        - name: CLEANUP_REPORT_CACHE_ENDPOINT
+          valueFrom: 
+            configMapKeyRef:
+              name: endpoints
+              key: redis-server
+        - name: CLEANUP_REPORT_DB_ENDPOINT
+          valueFrom: 
+            configMapKeyRef:
+              name: endpoints
+              key: postgres-cluster
+        - name: CLEANUP_REPORT_BLACKBOX_ENDPOINT
+          valueFrom: 
+            configMapKeyRef:
+              name: endpoints
+              key: blackbox-server 
+        image: quay.io/darkcubed/cleanup:release-v1.0_alpha-5006b4e
+        imagePullPolicy: Always
+        name: cleanup
+        ports:
+        - name: metrics
+          containerPort: 9102
+          protocol: TCP
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: FallbackToLogsOnError

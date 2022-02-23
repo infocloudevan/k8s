@@ -1,0 +1,104 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  annotations:
+    deployment.kubernetes.io/revision: "44"
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"apps/v1","kind":"Deployment","metadata":{"annotations":{"deployment.kubernetes.io/revision":"40"},"creationTimestamp":"2019-08-20T06:47:27Z","generation":46,"labels":{"app":"scoreboard"},"name":"scoreboard","namespace":"kafka-saas","selfLink":"/apis/apps/v1/namespaces/kafka-saas/deployments/scoreboard","uid":"5fdddca1-c316-11e9-9ac2-06e5485013f2"},"spec":{"progressDeadlineSeconds":2147483647,"replicas":1,"revisionHistoryLimit":10,"selector":{"matchLabels":{"app":"scoreboard"}},"strategy":{"rollingUpdate":{"maxSurge":1,"maxUnavailable":1},"type":"RollingUpdate"},"template":{"metadata":{"annotations":{"date":"1588107335"},"creationTimestamp":null,"labels":{"app":"scoreboard"}},"spec":{"containers":[{"args":["/hyperdark","--log.verbosity=10","scoreboard","--app.root-url=https://pathfinder.darkcubed.com","--app.syslog-domain=crab.a.darkcubed.net","--app.restrict-registration"],"env":[{"name":"HYPERDARK_KAFKA_ENDPOINTS","valueFrom":{"configMapKeyRef":{"key":"kafka-cluster","name":"endpoints"}}},{"name":"HYPERDARK_CACHE_ENDPOINT","valueFrom":{"configMapKeyRef":{"key":"redis-server","name":"endpoints"}}},{"name":"HYPERDARK_CACHE_CLUSTER_ENDPOINTS","valueFrom":{"configMapKeyRef":{"key":"redis-cluster","name":"endpoints"}}},{"name":"HYPERDARK_DB_ENDPOINT","valueFrom":{"secretKeyRef":{"key":"postgres-cluster","name":"endpoints"}}},{"name":"HYPERDARK_ES_ENDPOINTS","valueFrom":{"configMapKeyRef":{"key":"es-cluster","name":"endpoints"}}},{"name":"HYPERDARK_ES_CREDENTIALS","valueFrom":{"secretKeyRef":{"key":"creds","name":"elastic"}}},{"name":"HYPERDARK_ES_SENSOR_SALT","valueFrom":{"secretKeyRef":{"key":"sensor-salt","name":"elastic"}}}],"image":"944254975049.dkr.ecr.us-gov-west-1.amazonaws.com/darkcubed-gov/hyperdark:961f26d","imagePullPolicy":"Always","name":"scoreboard","resources":{},"terminationMessagePath":"/dev/termination-log","terminationMessagePolicy":"FallbackToLogsOnError"}],"dnsPolicy":"ClusterFirst","restartPolicy":"Always","schedulerName":"default-scheduler","securityContext":{},"terminationGracePeriodSeconds":30}}}}
+  creationTimestamp: "2019-08-20T06:47:27Z"
+  generation: 48
+  labels:
+    app: scoreboard
+  name: scoreboard
+  namespace: kafka-saas
+  resourceVersion: "125981357"
+  selfLink: /apis/extensions/v1beta1/namespaces/kafka-saas/deployments/scoreboard
+  uid: 5fdddca1-c316-11e9-9ac2-06e5485013f2
+spec:
+  progressDeadlineSeconds: 2147483647
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: scoreboard
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+    type: RollingUpdate
+  template:
+    metadata:
+      annotations:
+        date: "1588107335"
+      creationTimestamp: null
+      labels:
+        app: scoreboard
+    spec:
+      containers:
+      - args:
+        - /hyperdark
+        - --log.verbosity=10
+        - scoreboard
+        - --app.root-url=https://pathfinder.darkcubed.com
+        - --app.syslog-domain=crab.a.darkcubed.net
+        - --app.restrict-registration
+        env:
+        - name: HYPERDARK_KAFKA_ENDPOINTS
+          valueFrom:
+            configMapKeyRef:
+              key: kafka-cluster
+              name: endpoints
+        - name: HYPERDARK_CACHE_ENDPOINT
+          valueFrom:
+            configMapKeyRef:
+              key: redis-server
+              name: endpoints
+        - name: HYPERDARK_CACHE_CLUSTER_ENDPOINTS
+          valueFrom:
+            configMapKeyRef:
+              key: redis-cluster
+              name: endpoints
+        - name: HYPERDARK_DB_ENDPOINT
+          valueFrom:
+            secretKeyRef:
+              key: postgres-cluster
+              name: endpoints
+        - name: HYPERDARK_ES_ENDPOINTS
+          valueFrom:
+            configMapKeyRef:
+              key: es-cluster
+              name: endpoints
+        - name: HYPERDARK_ES_CREDENTIALS
+          valueFrom:
+            secretKeyRef:
+              key: creds
+              name: elastic
+        - name: HYPERDARK_ES_SENSOR_SALT
+          valueFrom:
+            secretKeyRef:
+              key: sensor-salt
+              name: elastic
+        image: 944254975049.dkr.ecr.us-gov-west-1.amazonaws.com/darkcubed-gov/hyperdark:f2d65ca
+        imagePullPolicy: Always
+        name: scoreboard
+        resources: {}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: FallbackToLogsOnError
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
+status:
+  availableReplicas: 1
+  conditions:
+  - lastTransitionTime: "2019-08-20T06:47:27Z"
+    lastUpdateTime: "2019-08-20T06:47:27Z"
+    message: Deployment has minimum availability.
+    reason: MinimumReplicasAvailable
+    status: "True"
+    type: Available
+  observedGeneration: 48
+  readyReplicas: 1
+  replicas: 1
+  updatedReplicas: 1

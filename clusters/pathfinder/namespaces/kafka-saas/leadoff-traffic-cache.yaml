@@ -1,0 +1,95 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  annotations:
+    deployment.kubernetes.io/revision: "4"
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"apps/v1","kind":"Deployment","metadata":{"annotations":{},"name":"leadoff-traffic-cache","namespace":"kafka-saas"},"spec":{"replicas":1,"selector":{"matchLabels":{"app":"leadoff-traffic-cache"}},"template":{"metadata":{"annotations":null,"labels":{"app":"leadoff-traffic-cache","prom":"monitor"}},"spec":{"containers":[{"args":["/leadoff","--log.verbosity=10","traffic-cache"],"env":[{"name":"LEADOFF_TRAFFIC_CACHE_KAFKA_ENDPOINTS","valueFrom":{"configMapKeyRef":{"key":"kafka-cluster","name":"endpoints"}}},{"name":"LEADOFF_TRAFFIC_CACHE_CACHE_ENDPOINT","valueFrom":{"configMapKeyRef":{"key":"redis-server","name":"endpoints"}}},{"name":"LEADOFF_TRAFFIC_CACHE_CACHE_CLUSTER_ENDPOINTS","valueFrom":{"configMapKeyRef":{"key":"redis-cluster","name":"endpoints"}}}],"image":"944254975049.dkr.ecr.us-gov-west-1.amazonaws.com/darkcubed-gov/leadoff:v1.0.1","imagePullPolicy":"Always","name":"leadoff","ports":[{"containerPort":9102,"name":"metrics","protocol":"TCP"}],"terminationMessagePath":"/dev/termination-log","terminationMessagePolicy":"FallbackToLogsOnError"}]}}}}
+  creationTimestamp: "2019-10-07T12:22:27Z"
+  generation: 8
+  labels:
+    app: leadoff-traffic-cache
+    prom: monitor
+  name: leadoff-traffic-cache
+  namespace: kafka-saas
+  resourceVersion: "124672342"
+  selfLink: /apis/extensions/v1beta1/namespaces/kafka-saas/deployments/leadoff-traffic-cache
+  uid: 200ff815-e8fd-11e9-9ac2-06e5485013f2
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: leadoff-traffic-cache
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      annotations:
+        date: "1588107254"
+      creationTimestamp: null
+      labels:
+        app: leadoff-traffic-cache
+        prom: monitor
+    spec:
+      containers:
+      - args:
+        - /hyperdark
+        - --log.verbosity=10
+        - leadoff
+        - traffic
+        - cache
+        env:
+        - name: HYPERDARK_KAFKA_ENDPOINTS
+          valueFrom:
+            configMapKeyRef:
+              key: kafka-cluster
+              name: endpoints
+        - name: HYPERDARK_CACHE_ENDPOINT
+          valueFrom:
+            configMapKeyRef:
+              key: redis-server
+              name: endpoints
+        - name: HYPERDARK_CACHE_CLUSTER_ENDPOINTS
+          valueFrom:
+            configMapKeyRef:
+              key: redis-cluster
+              name: endpoints
+        image: 944254975049.dkr.ecr.us-gov-west-1.amazonaws.com/darkcubed-gov/hyperdark:f2d65ca
+        imagePullPolicy: Always
+        name: leadoff
+        ports:
+        - containerPort: 9102
+          name: metrics
+          protocol: TCP
+        resources: {}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: FallbackToLogsOnError
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
+status:
+  availableReplicas: 1
+  conditions:
+  - lastTransitionTime: "2019-10-07T12:22:27Z"
+    lastUpdateTime: "2020-04-28T20:54:17Z"
+    message: ReplicaSet "leadoff-traffic-cache-7f6b54cb4d" has successfully progressed.
+    reason: NewReplicaSetAvailable
+    status: "True"
+    type: Progressing
+  - lastTransitionTime: "2020-08-27T03:18:03Z"
+    lastUpdateTime: "2020-08-27T03:18:03Z"
+    message: Deployment has minimum availability.
+    reason: MinimumReplicasAvailable
+    status: "True"
+    type: Available
+  observedGeneration: 8
+  readyReplicas: 1
+  replicas: 1
+  updatedReplicas: 1

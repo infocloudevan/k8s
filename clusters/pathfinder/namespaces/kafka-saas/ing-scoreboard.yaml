@@ -1,0 +1,45 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  annotations:
+    certmanager.k8s.io/cluster-issuer: letsencrypt-production
+    ingress.kubernetes.io/rewrite-target: /
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"extensions/v1beta1","kind":"Ingress","metadata":{"annotations":{"certmanager.k8s.io/cluster-issuer":"letsencrypt-production","ingress.kubernetes.io/rewrite-target":"/","kubernetes.io/ingress.class":"nginx","kubernetes.io/tls-acme":"true"},"name":"scoreboard","namespace":"kafka-saas"},"spec":{"rules":[{"host":"pathfinder.darkcubed.com","http":{"paths":[{"backend":{"serviceName":"scoreboard","servicePort":8080},"path":"/"}]}},{"host":"camden.a.darkcubed.net","http":{"paths":[{"backend":{"serviceName":"scoreboard","servicePort":8080},"path":"/"}]}}],"tls":[{"hosts":["pathfinder.darkcubed.com","camden.a.darkcubed.net"],"secretName":"scoreboard-app-ingress-tls"}]}}
+    kubernetes.io/ingress.class: nginx
+    kubernetes.io/tls-acme: "true"
+    nginx.ingress.kubernetes.io/auth-tls-secret: kube-system/dod-ca-certs-d3
+    nginx.ingress.kubernetes.io/auth-tls-verify-client: "on"
+    nginx.ingress.kubernetes.io/auth-tls-verify-depth: "1"
+  creationTimestamp: "2019-08-20T06:47:27Z"
+  generation: 2
+  name: scoreboard
+  namespace: kafka-saas
+  resourceVersion: "122380478"
+  selfLink: /apis/extensions/v1beta1/namespaces/kafka-saas/ingresses/scoreboard
+  uid: 5fe85ebd-c316-11e9-9ac2-06e5485013f2
+spec:
+  rules:
+  - host: pathfinder.darkcubed.com
+    http:
+      paths:
+      - backend:
+          serviceName: scoreboard
+          servicePort: 8080
+        path: /
+  - host: camden.a.darkcubed.net
+    http:
+      paths:
+      - backend:
+          serviceName: scoreboard
+          servicePort: 8080
+        path: /
+  tls:
+  - hosts:
+    - pathfinder.darkcubed.com
+    - camden.a.darkcubed.net
+    secretName: scoreboard-app-ingress-tls
+status:
+  loadBalancer:
+    ingress:
+    - hostname: ad87e25e1b0db11e99cf60248cac6057-559087685.us-gov-west-1.elb.amazonaws.com

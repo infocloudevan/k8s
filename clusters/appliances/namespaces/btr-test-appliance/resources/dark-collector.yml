@@ -1,0 +1,53 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: dark-collector
+data:
+  config.yml: |-
+    packetbeat.interfaces.device: eth0
+    packetbeat.interfaces.type: af_packet
+    packetbeat.flows:
+      timeout: 30s
+      period: -1s
+    packetbeat.protocols:
+    - type: dns
+      ports: [53]
+      include_authorities: true
+      include_additionals: true
+    output.darkcubed:
+      uuid: ""
+      endpoint: https://field.a.darkcubed.net
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: dark-collector
+spec:
+  replicas: 0
+  template:
+    metadata:
+      labels:
+        app: dark-collector
+    spec:
+      containers:
+      - args:
+        - /usr/local/bin/dark-collector
+        - -c=/usr/local/etc/dark-collector/config.yml
+        - -e
+        - -v
+        image: quay.io/darkcubed/dark-collector:v0.1.0
+        imagePullPolicy: IfNotPresent
+        name: collector
+        terminationMessagePolicy: FallbackToLogsOnError
+        volumeMounts:
+        - mountPath: /usr/local/etc/dark-collector
+          name: config
+      hostNetwork: true
+      imagePullSecrets:
+      - name: quay.io
+      nodeSelector:
+        appliance: btr-test-appliance
+      volumes:
+      - configMap:
+          name: dark-collector
+        name: config

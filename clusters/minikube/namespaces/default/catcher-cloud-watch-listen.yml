@@ -1,0 +1,69 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: catcher-cloud-watch-listener
+  name: catcher-cloud-watch-listener
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 0
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: catcher-cloud-watch-listener
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: catcher-cloud-watch-listener
+        prom: monitor
+    spec:
+      containers:
+        - args:
+            - /hyperdark
+            - --log.verbosity=10
+            - catcher
+            - cloud-watch-listen
+          env:
+            - name: HYPERDARK_KAFKA_ENDPOINTS
+              valueFrom:
+                configMapKeyRef:
+                  name: endpoints
+                  key: kafka-cluster
+            - name: HYPERDARK_DB_ENDPOINT
+              valueFrom:
+                configMapKeyRef:
+                  name: endpoints
+                  key: postgres-cluster
+            - name: HYPERDARK_CACHE_ENDPOINT
+              valueFrom:
+                configMapKeyRef:
+                  name: endpoints
+                  key: redis-server
+            - name: KINESIS_AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: aws-cloud-watch-credentials
+                  key: KINESIS_AWS_ACCESS_KEY_ID
+            - name: KINESIS_AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: aws-cloud-watch-credentials
+                  key: KINESIS_AWS_SECRET_ACCESS_KEY
+          image: hyperdark
+          ports:
+            - containerPort: 9102
+              name: metrics
+              protocol: TCP
+          imagePullPolicy: Never
+          name: catcher-cloud-watch-listener
+          resources: {}
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: FallbackToLogsOnError
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30

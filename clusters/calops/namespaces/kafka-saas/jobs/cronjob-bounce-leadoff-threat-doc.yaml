@@ -1,0 +1,49 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"batch/v1beta1","kind":"CronJob","metadata":{"annotations":{},"name":"bounce-leadoff-threat-doc","namespace":"kafka-saas"},"spec":{"concurrencyPolicy":"Forbid","failedJobsHistoryLimit":1,"jobTemplate":{"metadata":{"creationTimestamp":null},"spec":{"template":{"metadata":{"creationTimestamp":null,"labels":{"run":"bounce-leadoff-threat-doc"}},"spec":{"containers":[{"args":["/bin/bash","-c","/kubectl patch deployment leadoff-threat-doc -p \"{\\\"spec\\\":{\\\"template\\\":{\\\"metadata\\\":{\\\"annotations\\\":{\\\"date\\\":\\\"$(date +%s)\\\"}}}}}\""],"image":"activeshadow/kubectl:v1.12.7","imagePullPolicy":"IfNotPresent","name":"kubectl","resources":{},"terminationMessagePath":"/dev/termination-log","terminationMessagePolicy":"File"}],"dnsPolicy":"ClusterFirst","restartPolicy":"OnFailure","schedulerName":"default-scheduler","securityContext":{},"serviceAccount":"kubectl","serviceAccountName":"kubectl","terminationGracePeriodSeconds":30}}}},"schedule":"0,20,40 * * * *","successfulJobsHistoryLimit":1,"suspend":true}}
+  creationTimestamp: 2020-05-15T14:00:57Z
+  name: bounce-leadoff-threat-doc
+  namespace: kafka-saas
+  resourceVersion: "162512251"
+  selfLink: /apis/batch/v1beta1/namespaces/kafka-saas/cronjobs/bounce-leadoff-threat-doc
+  uid: 7fca3b7b-96b4-11ea-b2d5-067d46b7253a
+spec:
+  concurrencyPolicy: Forbid
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    metadata:
+      creationTimestamp: null
+    spec:
+      template:
+        metadata:
+          creationTimestamp: null
+          labels:
+            run: bounce-leadoff-threat-doc
+        spec:
+          containers:
+          - args:
+            - /bin/bash
+            - -c
+            - /kubectl patch deployment leadoff-threat-doc -p "{\"spec\":{\"template\":{\"metadata\":{\"annotations\":{\"date\":\"$(date
+              +%s)\"}}}}}"
+            image: activeshadow/kubectl:v1.12.7
+            imagePullPolicy: IfNotPresent
+            name: kubectl
+            resources: {}
+            terminationMessagePath: /dev/termination-log
+            terminationMessagePolicy: File
+          dnsPolicy: ClusterFirst
+          restartPolicy: OnFailure
+          schedulerName: default-scheduler
+          securityContext: {}
+          serviceAccount: kubectl
+          serviceAccountName: kubectl
+          terminationGracePeriodSeconds: 30
+  schedule: 0,20,40 * * * *
+  successfulJobsHistoryLimit: 1
+  suspend: true
+status:
+  lastScheduleTime: 2020-05-18T14:20:00Z

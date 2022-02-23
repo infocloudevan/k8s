@@ -1,0 +1,24 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: rm-settings-{{APPLIANCE}}
+  namespace: {{NAMESPACE}}
+spec:
+  template:
+    metadata:
+      name: rm-settings-{{APPLIANCE}}
+    spec:
+      nodeSelector:
+        appliance: {{APPLIANCE}}
+      containers:
+        - name: rm-settings-{{APPLIANCE}}
+          image: busybox
+          command: ["rm", "/tmp/opt/darkcubed/scoreboard/settings"]
+          volumeMounts:
+            - name: settings-tmp
+              mountPath: /tmp/opt/darkcubed/scoreboard
+      restartPolicy: Never
+      volumes:
+        - name: settings-tmp
+          hostPath:
+            path: /opt/darkcubed/scoreboard

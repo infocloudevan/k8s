@@ -1,0 +1,38 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: leadoff-traffic-cache
+spec:
+  replicas: 1
+  template:
+    metadata:
+      annotations:
+      labels:
+        app: leadoff-traffic-cache
+        prom: monitor
+    spec:
+      containers:
+      - args:
+        - /leadoff
+        - --log.verbosity=10
+        - traffic-cache
+        env:
+        - name: LEADOFF_TRAFFIC_CACHE_KAFKA_ENDPOINTS
+          valueFrom: 
+            configMapKeyRef:
+              name: endpoints
+              key: kafka-cluster
+        - name: LEADOFF_TRAFFIC_CACHE_CACHE_ENDPOINT
+          valueFrom: 
+            configMapKeyRef:
+              name: endpoints
+              key: redis-server
+        image: quay.io/darkcubed/leadoff:release-v1.0_alpha-3dc9aba
+        imagePullPolicy: Always
+        name: leadoff
+        ports:
+        - name: metrics
+          containerPort: 9102
+          protocol: TCP
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: FallbackToLogsOnError

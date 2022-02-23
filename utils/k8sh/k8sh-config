@@ -1,0 +1,1069 @@
+d3-help() {
+  usage="
+  The following Dark Cubed extensions exist for k8sh.
+  Each of them has a '-h' option available for additional help.
+
+      status                  print status table for appliances
+      reboot-appliance        force an appliance to reboot
+      edit-deployments        edit 1 or more deployment configs
+      get-deployment          show deployment in YAML format
+      watch-pods              get pod status every 5 seconds
+      create-graybox-certs    create graybox cert secrets
+      restart-deployments     restart a deployment(s) via patching
+      scale-deployment        scale a deployment to given value
+      debug-mode              put container into debug mode
+      force-drain-node        forcefully drain a node
+      force-drain-ig          forcefully drain all IG nodes
+      show-broken             show all pods not 'Running'
+      bounce-aws-node         reboot aws node by DNS name 
+      destroy-aws-node        terminate aws node by DNS name
+      get-cloud-config        show cloud-config for given appliance
+      inspect-csr             show details of a CSR
+      list-incoming-csr       show list of actively incoming CSRs
+      clear-pending-csr       delete all pending CSRs
+      follow-pod-logs         follow logs for first found pod
+      get-pvc-status          show AWS volume status for PVC
+      detach-pvc              (force) detach AWS volume for PVC
+      force-delete-pod        forcefully delete pod w/ no grace period 
+      get-termination-msg     get pod's last state termination message
+      total-resource-requests get cluster resource request totals"
+
+  echo "$usage"
+  echo
+}
+
+total-resource-requests() {
+  # Without this, 'getopts' fails below.
+  # https://stackoverflow.com/a/16655341/451664
+  local OPTIND
+
+  usage="
+  usage: total-resource-requests [-h]
+
+	This script will calculate the total resource requests across the
+  cluster for nodes in the 2a-nodes, 2b-nodes, and 2c-nodes instance
+  groups. 
+
+  where:
+    -h   show this help text"
+
+  # loop through positional options/arguments
+  while getopts ':h' option; do
+    case "$option" in
+      h)  echo "$usage"; echo; return ;;
+      \?) echo -e "illegal option: -$OPTARG\n" >&2
+          echo "$usage" >&2
+          echo
+          return ;;
+    esac
+  done
+
+  shift "$((OPTIND-1))"
+
+  local groups=( 2a-nodes 2b-nodes 2c-nodes )
+  local total=0
+  local reserved=0
+
+  for group in "${groups[@]}"; do
+    echo "getting details for group $group..."
+
+    for requested in `describe nodes -l kops.k8s.io/instancegroup=$group | awk '/^  CPU Requests/{getline; getline; print $1}'`; do
+      reserved=$((reserved + ${requested::-1}))
+      total=$((total + 6500))
+    done
+  done
+
+  echo $(bc -l <<< "scale=2; ($reserved/$total)*100")
+}
+
+get-termination-msg() {
+  # Without this, 'getopts' fails below.
+  # https://stackoverflow.com/a/16655341/451664
+  local OPTIND
+
+  usage="
+  usage: get-termination-msg [-h] <pod-name>
+
+	This script will pull the last state termination message from the
+  pod's status. This really only works if terminationMessagePolicy is
+  set to FallbackToLogsOnError in the pod spec.
+
+  where:
+    -h   show this help text"
+
+  # loop through positional options/arguments
+  while getopts ':h' option; do
+    case "$option" in
+      h)  echo "$usage"; echo; return ;;
+      \?) echo -e "illegal option: -$OPTARG\n" >&2
+          echo "$usage" >&2
+          echo
+          return ;;
+    esac
+  done
+
+  shift "$((OPTIND-1))"
+
+  get pod/$1 -o \
+    go-template="{{range .status.containerStatuses}}{{.lastState.terminated.message}}{{end}}"
+}
+
+force-delete-pod() {
+  # Without this, 'getopts' fails below.
+  # https://stackoverflow.com/a/16655341/451664
+  local OPTIND
+
+  usage="
+  usage: force-delete-pod [-h] <pod-name>
+
+	This script will forcefully delete the given pod with no grace period.
+
+  where:
+    -h   show this help text"
+
+  # loop through positional options/arguments
+  while getopts ':h' option; do
+    case "$option" in
+      h)  echo "$usage"; echo; return ;;
+      \?) echo -e "illegal option: -$OPTARG\n" >&2
+          echo "$usage" >&2
+          echo
+          return ;;
+    esac
+  done
+
+  shift "$((OPTIND-1))"
+
+  delete pod/$1 --force --grace-period 0
+}
+
+detach-pvc() {
+  # Without this, 'getopts' fails below.
+  # https://stackoverflow.com/a/16655341/451664
+  local OPTIND
+
+  force=false
+
+  usage="
+  usage: detach-pvc [-h] <pvc-name>
+
+	This script will use the aws cli to detach the AWS volume backing the given
+	PVC. If the current state of the volume is 'available', nothing will be done.
+	If the current state is 'busy', the '--force' flag will be used. This script
+	will block until the volume becomes available.
+
+  where:
+    -f   force detach volume no matter the current state
+    -h   show this help text"
+
+  # loop through positional options/arguments
+  while getopts ':hf' option; do
+    case "$option" in
+      f)  force=true ;;
+      h)  echo "$usage"; echo; return ;;
+      \?) echo -e "illegal option: -$OPTARG\n" >&2
+          echo "$usage" >&2
+          echo
+          return ;;
+    esac
+  done
+
+  shift "$((OPTIND-1))"
+
+	details=$(aws ec2 describe-volumes --filters Name=tag-value,Values=$1)
+  state=$(echo $details | jq -r '.Volumes[0].State')
+  id=$(echo $details | jq -r '.Volumes[0].VolumeId')
+
+  case $state in
+    null)
+      echo 'Volume not found.'
+      return
+      ;;
+    available)
+      echo 'Volume is already detached.'
+      return
+      ;;
+    busy)
+      echo 'Force-detaching volume.'
+      aws ec2 detach-volume --force --volume-id $id 2>&1 > /dev/null
+      ;;
+    in-use)
+      if [[ "$force" = true ]]; then
+        echo 'Force-detaching volume (due to provided option flag).'
+        aws ec2 detach-volume --force --volume-id $id 2>&1 > /dev/null
+      else
+        echo 'Detaching volume.'
+        aws ec2 detach-volume --volume-id $id 2>&1 > /dev/null
+      fi
+      ;;
+    *)
+      echo 'Volume is in unknown state.'
+      return
+      ;;
+  esac
+
+  count=0
+
+  until [[ "$state" == "available" ]]; do
+    count=$((count + 1))
+    printf '.%.0s' {1..$count}
+    sleep 3
+    state=$(aws ec2 describe-volumes --filters Name=tag-value,Values=$1 | jq -r '.Volumes[0].State')
+  done
+
+  echo
+  echo "Volume has been detached."
+}
+
+get-pvc-status() {
+  # Without this, 'getopts' fails below.
+  # https://stackoverflow.com/a/16655341/451664
+  local OPTIND
+
+  usage="
+  usage: get-pvc-status [-h] <pvc-name>
+
+  This script will use the aws cli to get the status of the AWS volume
+  backing the given PVC.
+
+  where:
+    -h   show this help text"
+
+  # loop through positional options/arguments
+  while getopts ':h' option; do
+    case "$option" in
+      h)  echo "$usage"; echo; return ;;
+      \?) echo -e "illegal option: -$OPTARG\n" >&2
+          echo "$usage" >&2
+          echo
+          return ;;
+    esac
+  done
+
+  shift "$((OPTIND-1))"
+
+	aws ec2 describe-volumes --filters Name=tag-value,Values=$1 | jq -r '.Volumes[0].State'
+}
+
+follow-pod-logs() {
+  # Without this, 'getopts' fails below.
+  # https://stackoverflow.com/a/16655341/451664
+  local OPTIND
+
+  usage="
+  usage: follow-pod-logs [-h] <name>
+
+  This script will find the first pod that matches the given name and
+  follow its logs.
+
+  where:
+    -h   show this help text"
+
+  # loop through positional options/arguments
+  while getopts ':h' option; do
+    case "$option" in
+      h)  echo "$usage"; echo; return ;;
+      \?) echo -e "illegal option: -$OPTARG\n" >&2
+          echo "$usage" >&2
+          echo
+          return ;;
+    esac
+  done
+
+  shift "$((OPTIND-1))"
+
+  kubetail $1 --context $KUBECTL_CONTEXT --namespace $KUBECTL_NAMESPACE
+}
+
+clear-pending-csr() {
+  # Without this, 'getopts' fails below.
+  # https://stackoverflow.com/a/16655341/451664
+  local OPTIND
+
+  usage="
+  usage: clear-pending-csr [-h]
+
+  This script will delete ALL currently pending CSRs.
+
+  where:
+    -h   show this help text"
+
+  # loop through positional options/arguments
+  while getopts ':h' option; do
+    case "$option" in
+      h)  echo "$usage"; echo; return ;;
+      \?) echo -e "illegal option: -$OPTARG\n" >&2
+          echo "$usage" >&2
+          echo
+          return ;;
+    esac
+  done
+
+  shift "$((OPTIND-1))"
+
+  delete csr $(get csr | grep Pending | awk '{print $1}')
+}
+
+list-incoming-csr() {
+  # Without this, 'getopts' fails below.
+  # https://stackoverflow.com/a/16655341/451664
+  local OPTIND
+
+  usage="
+  usage: list-incoming-csr [-h]
+
+  This script will display a list of all actively incoming CSRs (those
+  CSRs that have been created within the last minute).
+
+  where:
+    -h   show this help text"
+
+  # loop through positional options/arguments
+  while getopts ':h' option; do
+    case "$option" in
+      h)  echo "$usage"; echo; return ;;
+      \?) echo -e "illegal option: -$OPTARG\n" >&2
+          echo "$usage" >&2
+          echo
+          return ;;
+    esac
+  done
+
+  shift "$((OPTIND-1))"
+
+  get csr | grep Pending | egrep "\s[0-9]*s\s"
+}
+
+inspect-csr() {
+  # Without this, 'getopts' fails below.
+  # https://stackoverflow.com/a/16655341/451664
+  local OPTIND
+
+  usage="
+  usage: inspect-csr [-h] <CSR name>
+
+  This script will display the details of a certificate signing request.
+
+  where:
+    -h   show this help text"
+
+  # loop through positional options/arguments
+  while getopts ':h' option; do
+    case "$option" in
+      h)  echo "$usage"; echo; return ;;
+      \?) echo -e "illegal option: -$OPTARG\n" >&2
+          echo "$usage" >&2
+          echo
+          return ;;
+    esac
+  done
+
+  shift "$((OPTIND-1))"
+
+  get csr $1 -o jsonpath="{.spec.request}" | base64 -d | openssl req -noout -text
+}
+
+get-cloud-config() {
+  # Without this, 'getopts' fails below.
+  # https://stackoverflow.com/a/16655341/451664
+  local OPTIND
+
+  usage="
+  usage: get-cloud-config [-h] <appliance>
+
+  This script will display the cloud-config for the given appliance.
+
+  where:
+    -h   show this help text"
+
+  # loop through positional options/arguments
+  while getopts ':h' option; do
+    case "$option" in
+      h)  echo "$usage"; echo; return ;;
+      \?) echo -e "illegal option: -$OPTARG\n" >&2
+          echo "$usage" >&2
+          echo
+          return ;;
+    esac
+  done
+
+  shift "$((OPTIND-1))"
+
+  get configmap/$1-cloud-config -o jsonpath="{.data.cloud-config\.yml}"
+}
+
+destroy-aws-node() {
+  # Without this, 'getopts' fails below.
+  # https://stackoverflow.com/a/16655341/451664
+  local OPTIND
+
+  usage="
+  usage: destroy-aws-node [-h] <DNS hostname>
+
+  This script will terminate the AWS VM w/ the given DNS hostname.
+
+  where:
+    -h   show this help text"
+
+  # loop through positional options/arguments
+  while getopts ':h' option; do
+    case "$option" in
+      h)  echo "$usage"; echo; return ;;
+      \?) echo -e "illegal option: -$OPTARG\n" >&2
+          echo "$usage" >&2
+          echo
+          return ;;
+    esac
+  done
+
+  shift "$((OPTIND-1))"
+
+  if [ -z "$1" ]; then
+    echo "must provide DNS hostname"
+    return
+  fi
+
+  local jq_installed=true
+  which jq 2>&1 > /dev/null || jq_installed=false
+
+  if ! $jq_installed ; then
+    echo "jq is not installed"
+    return
+  fi
+
+  id=$(aws ec2 describe-instances --filters "Name=private-dns-name,Values=$1" | jq -r .Reservations[0].Instances[0].InstanceId)
+
+  if [ -z "$id" ]; then
+    echo "instance ID not found for $1"
+    return
+  fi
+
+  local success=true
+  aws ec2 terminate-instances --instance-ids $id || success=false
+
+  if ! $success ; then
+    echo "failed to terminate instance"
+    return
+  fi
+
+  echo "instance with ID $id terminated"
+}
+
+bounce-aws-node() {
+  # Without this, 'getopts' fails below.
+  # https://stackoverflow.com/a/16655341/451664
+  local OPTIND
+
+  usage="
+  usage: bounce-aws-node [-h] <DNS hostname>
+
+  This script will restart the AWS VM w/ the given DNS hostname.
+
+  where:
+    -h   show this help text"
+
+  # loop through positional options/arguments
+  while getopts ':h' option; do
+    case "$option" in
+      h)  echo "$usage"; echo; return ;;
+      \?) echo -e "illegal option: -$OPTARG\n" >&2
+          echo "$usage" >&2
+          echo
+          return ;;
+    esac
+  done
+
+  shift "$((OPTIND-1))"
+
+  if [ -z "$1" ]; then
+    echo "must provide DNS hostname"
+    return
+  fi
+
+  local jq_installed=true
+  which jq 2>&1 > /dev/null || jq_installed=false
+
+  if ! $jq_installed ; then
+    echo "jq is not installed"
+    return
+  fi
+
+  id=$(aws ec2 describe-instances --filters "Name=private-dns-name,Values=$1" | jq -r .Reservations[0].Instances[0].InstanceId)
+
+  if [ -z "$id" ]; then
+    echo "instance ID not found for $1"
+    return
+  fi
+
+  local success=true
+  aws ec2 reboot-instances --instance-ids $id || success=false
+
+  if ! $success ; then
+    echo "failed to reboot instance"
+    return
+  fi
+
+  echo "instance with ID $id rebooted"
+}
+
+show-broken() {
+  # Without this, 'getopts' fails below.
+  # https://stackoverflow.com/a/16655341/451664
+  local OPTIND
+
+  usage="
+  usage: show-broken [-h]
+
+  This script will list all pods (across all namespaces) that aren't
+  currently in the 'Running' state.
+
+  where:
+    -h   show this help text"
+
+  # loop through positional options/arguments
+  while getopts ':h' option; do
+    case "$option" in
+      h)  echo "$usage"; echo; return ;;
+      \?) echo -e "illegal option: -$OPTARG\n" >&2
+          echo "$usage" >&2
+          echo
+          return ;;
+    esac
+  done
+
+  shift "$((OPTIND-1))"
+
+  pods -o wide --all-namespaces | grep -v Running
+}
+
+force-drain-ig() {
+  # Without this, 'getopts' fails below.
+  # https://stackoverflow.com/a/16655341/451664
+  local OPTIND
+
+  usage="
+  usage: force-drain-ig [-h] <instance-group-name>
+
+  This script will forcefully drain all nodes in an instance group,
+  providing the following flags to 'kubectl drain':
+
+  --delete-local-data=true
+  --ignore-daemonsets=true
+  --force=true
+
+  where:
+    -h   show this help text"
+
+  # loop through positional options/arguments
+  while getopts ':h' option; do
+    case "$option" in
+      h)  echo "$usage"; echo; return ;;
+      \?) echo -e "illegal option: -$OPTARG\n" >&2
+          echo "$usage" >&2
+          echo
+          return ;;
+    esac
+  done
+
+  shift "$((OPTIND-1))"
+
+  if [ -z "$1" ]; then
+    echo "Must provide instance group name"
+    return
+  fi
+
+  for node in $(nodes --show-labels | grep "kops.k8s.io/instancegroup=$1" | awk '{print $1}'); do
+    k drain $node --delete-local-data=true --ignore-daemonsets=true --force=true
+  done
+}
+
+force-drain-node() {
+  # Without this, 'getopts' fails below.
+  # https://stackoverflow.com/a/16655341/451664
+  local OPTIND
+
+  usage="
+  usage: force-drain-node [-h] <node-id>
+
+  This script will forcefully drain a node, providing the following
+  flags to 'kubectl drain':
+
+  --delete-local-data=true
+  --ignore-daemonsets=true
+  --force=true
+
+  where:
+    -h   show this help text"
+
+  # loop through positional options/arguments
+  while getopts ':h' option; do
+    case "$option" in
+      h)  echo "$usage"; echo; return ;;
+      \?) echo -e "illegal option: -$OPTARG\n" >&2
+          echo "$usage" >&2
+          echo
+          return ;;
+    esac
+  done
+
+  shift "$((OPTIND-1))"
+
+  if [ -z "$1" ]; then
+    echo "Must provide node ID"
+    return
+  fi
+
+  k drain $1 --delete-local-data=true --ignore-daemonsets=true --force=true
+}
+
+debug-mode() {
+  # Without this, 'getopts' fails below.
+  # https://stackoverflow.com/a/16655341/451664
+  local OPTIND
+
+  usage="
+  usage: debug-mode [-h] <pod-id> [container-name]
+
+  This script will put the given container in the given pod into debug
+  mode via 'kill -s USR1'. If the container name is not provided, it
+  will assume there's only one container running in the pod.
+
+  where:
+    -h   show this help text"
+
+  # loop through positional options/arguments
+  while getopts ':h' option; do
+    case "$option" in
+      h)  echo "$usage"; echo; return ;;
+      \?) echo -e "illegal option: -$OPTARG\n" >&2
+          echo "$usage" >&2
+          echo
+          return ;;
+    esac
+  done
+
+  shift "$((OPTIND-1))"
+
+  if [ -z "$1" ]; then
+    echo "Must provide pod ID"
+    return
+  fi
+
+  if [ -z "$2" ]; then
+    k exec -it $1 -- kill -s USR1 1
+  else
+    k exec -it $1 -c $2 -- kill -s USR1 1
+  fi
+}
+
+scale-deployment() {
+  # Without this, 'getopts' fails below.
+  # https://stackoverflow.com/a/16655341/451664
+  local OPTIND
+
+  usage="
+  usage: scale-deployment [-h] <deployment name> <replicas>
+
+  This script will scale the given deployment in the current namespace
+  to the given number of replicas.
+
+  where:
+    -h   show this help text"
+
+  # loop through positional options/arguments
+  while getopts ':h' option; do
+    case "$option" in
+      h)  echo "$usage"; echo; return ;;
+      \?) echo -e "illegal option: -$OPTARG\n" >&2
+          echo "$usage" >&2
+          echo
+          return ;;
+    esac
+  done
+
+  shift "$((OPTIND-1))"
+
+  if [ -z "$1" ]; then
+    echo "Must provide name of deployment to scale"
+    return
+  fi
+
+  if [ -z "$2" ]; then
+    echo "Must provide number of replicas to scale to"
+    return
+  fi
+
+  scale deployment/$1 --replicas $2
+}
+
+restart-deployments() {
+  # Without this, 'getopts' fails below.
+  # https://stackoverflow.com/a/16655341/451664
+  local OPTIND
+
+  usage="
+  usage: restart-deployments [-h] <deployment name(s)>
+
+  This script will patch the given deployment(s) in the current
+  namespace with a 'date' annotation to force it to do a rolling
+  update.
+
+  where:
+    -h   show this help text"
+
+  # loop through positional options/arguments
+  while getopts ':h' option; do
+    case "$option" in
+      h)  echo "$usage"; echo; return ;;
+      \?) echo -e "illegal option: -$OPTARG\n" >&2
+          echo "$usage" >&2
+          echo
+          return ;;
+    esac
+  done
+
+  shift "$((OPTIND-1))"
+
+  for d in "$@"; do
+    echo "Patching deployment $d with an updated timestamp to force a rolling update."
+
+    k patch deployment $d -p \
+      "{\"spec\":{\"template\":{\"metadata\":{\"annotations\":{\"date\":\"`date +'%s'`\"}}}}}"
+  done
+
+# for d in "$@"; do
+#   scale=$(get deployment/$d | grep $d | awk '{print $2}')
+
+#   if [[ ! -z "$scale" ]]; then
+#     echo "Scaling deployment $d to 0, then back to $scale"
+
+#     local success=true
+#     scale deployment/$d --replicas 0 || success=false
+
+#     if ! $success ; then
+#       echo "Failure scaling $d to 0 -- aborting"
+#       continue
+#     else
+#       local success=true
+#       scale deployment/$d --replicas $scale || success=false
+
+#       if ! $success ; then
+#         echo "Failure scaling $d to $scale -- aborting"
+#         continue
+#       fi
+#     fi
+#   else
+#     echo "Failure getting current scaling for $d -- aborting"
+#     continue
+#   fi
+# done
+}
+
+create-graybox-certs() {
+  # Without this, 'getopts' fails below.
+  # https://stackoverflow.com/a/16655341/451664
+  local OPTIND
+
+  cert="./tls.crt"
+  key="./tls.key"
+  dhp="./dhparam.pem"
+
+  usage="
+  usage: create-graybox-certs [-h] [-c] [-k] [-d]
+
+  This script will create graybox-tls and graybox-cert secrets in the
+  current namespace using an already existing key/cert pair. The
+  graybox-tls secret will contain both the key and the cert, along with
+  the DH parameters file, and is intended to be used by the Graybox API
+  server. The graybox-cert secret will only contain the cert, and is
+  intended to be used by appliances reporting to the Graybox.
+
+  where:
+    -h   show this help text
+    -c   TLS certificate file (pem format, defaults to ./tls.crt)
+    -k   TLS key file (pem format, defaults to ./tls.key)
+    -d   DH parameters file (pem format, defaults to ./dhparam.pem)"
+
+  # loop through positional options/arguments
+  while getopts ':hc:k:d:' option; do
+    case "$option" in
+      h)  echo "$usage"; echo; return ;;
+      c)  cert="$OPTARG"              ;;
+      k)  key="$OPTARG"               ;;
+      d)  dhp="$OPTARG"               ;;
+      :)  echo -e "missing option argument for -$OPTARG\n" >&2
+          echo "$usage" >&2
+          return ;;
+      \?) echo -e "illegal option: -$OPTARG\n" >&2
+          echo "$usage" >&2
+          echo
+          return ;;
+    esac
+  done
+
+  if [ -z "$cert" ]; then
+    echo "no certificate file provided"
+    return 
+  fi
+
+  if [ -z "$key" ]; then
+    echo "no key file provided"
+    return 
+  fi
+
+  if [ -z "$dhp" ]; then
+    echo "no DH parameters file provided"
+    return 
+  fi
+
+  create secret generic graybox-tls  --from-file=tls.crt=$cert --from-file=tls.key=$key --from-file=dhparam.pem=$dhp
+  create secret generic graybox-cert --from-file=$cert
+}
+
+watch-pods() {
+  # Without this, 'getopts' fails below.
+  # https://stackoverflow.com/a/16655341/451664
+  local OPTIND
+
+  usage="
+  usage: watch-pods [-h] <grep term>
+
+  This script will get all pods in the current namespace, optionally
+  filtering based on the given grep term, every 5 seconds.
+
+  where:
+    -h   show this help text"
+
+  # loop through positional options/arguments
+  while getopts ':h' option; do
+    case "$option" in
+      h)  echo "$usage"; echo; return ;;
+      \?) echo -e "illegal option: -$OPTARG\n" >&2
+          echo "$usage" >&2
+          echo
+          return ;;
+    esac
+  done
+
+  shift "$((OPTIND-1))"
+
+  # Cannot use the k8sh 'pods' alias here because 'watch' doesn't run
+  # the given command in k8sh.
+  if [ -z "$1" ]; then
+    watch -n 5 "kubectl --context $KUBECTL_CONTEXT --namespace $KUBECTL_NAMESPACE get pods"
+  else
+    watch -n 5 "kubectl --context $KUBECTL_CONTEXT --namespace $KUBECTL_NAMESPACE get pods | grep $1"
+  fi
+}
+
+get-deployment() {
+  # Without this, 'getopts' fails below.
+  # https://stackoverflow.com/a/16655341/451664
+  local OPTIND
+
+  usage="
+  usage: get-deployment [-h] <deployment>
+
+  This script will display the given deployment for the current
+  namespace in YAML format.
+
+  where:
+    -h   show this help text"
+
+  # loop through positional options/arguments
+  while getopts ':h' option; do
+    case "$option" in
+      h)  echo "$usage"; echo; return ;;
+      \?) echo -e "illegal option: -$OPTARG\n" >&2
+          echo "$usage" >&2
+          echo
+          return ;;
+    esac
+  done
+
+  shift "$((OPTIND-1))"
+
+  get deployment/$1 --export -o yaml
+}
+
+edit-deployments() {
+  # Without this, 'getopts' fails below.
+  # https://stackoverflow.com/a/16655341/451664
+  local OPTIND
+
+  usage="
+  usage: edit-deployments [-h] <deployment 0 ... n>
+
+  This script will open your default editor with all the deployment
+  configs specified for the current namespace.
+
+  where:
+    -h   show this help text"
+
+  # loop through positional options/arguments
+  while getopts ':h' option; do
+    case "$option" in
+      h)  echo "$usage"; echo; return ;;
+      \?) echo -e "illegal option: -$OPTARG\n" >&2
+          echo "$usage" >&2
+          echo
+          return ;;
+    esac
+  done
+
+  shift "$((OPTIND-1))"
+
+  edit deployment $@
+}
+
+reboot-appliance() {
+  # Without this, 'getopts' fails below.
+  # https://stackoverflow.com/a/16655341/451664
+  local OPTIND
+
+  usage="
+  usage: reboot-appliance [-h] -a <appliance name>
+
+  This script will update the given appliance's config map with a
+  new reboot time, causing it to reboot the next time it reports in.
+
+  where:
+    -h   show this help text
+    -a   name of the appliance to reboot"
+
+  # loop through positional options/arguments
+  while getopts ':ha:' option; do
+    case "$option" in
+      h)  echo "$usage"; echo; return ;;
+      a)  appliance="$OPTARG"         ;;
+      :)  echo -e "missing option argument for -$OPTARG\n" >&2
+          echo "$usage" >&2
+          return ;;
+      \?) echo -e "illegal option: -$OPTARG\n" >&2
+          echo "$usage" >&2
+          echo
+          return ;;
+    esac
+  done
+
+  if [ -z "$appliance" ]; then
+    echo "no appliance name provided"
+    return 
+  fi
+
+  k patch configmap $appliance-cloud-config -p "{\"data\": {\"reboot\": \"$(date +%s)\"} }"
+}
+
+status() {
+  DATECMD="date"
+
+  # Date command is different on macOS than it is on Linux...
+  case $OSTYPE in darwin*) DATECMD="gdate" ;; esac
+
+  table() {
+    if [ "$all" = true ]; then
+      results=$(get current-status --all-namespaces -o json)
+      echo ""
+      echo "These appliances/sensors for all namespaces last checked in at the following date/time:"
+    else
+      echo ""
+      echo "These appliances/sensors for namespace "$KUBECTL_NAMESPACE" last checked in at the following date/time:"
+      results=$(get current-status -o json)
+    fi
+
+    echo ""
+
+    nodes=$(get nodes -o json)
+
+    printf "| %-25s | %-30s | %-7s | %-30s | %-30s | %-17s | %-13s\n" \
+      "Appliance" "Date/Time of last Check-in" "Ready" "Date/Time of last Heartbeat" "Date/Time of last Reboot" "Kubelet" "Cloud Config" \
+      "-------------------------" "------------------------------" "-------" "------------------------------" "------------------------------" "-----------------" "-------------"
+
+    for i in $(echo $results | jq '.items | keys[] as $k | select(.[$k].spec.updated != "unknown") | $k'); do    
+      DATE=$(echo $results  | jq --arg I $i    '.items[$I|tonumber] | .spec.updated|tonumber')
+      NAME=$(echo $results  | jq --arg I $i    '.items[$I|tonumber] | .metadata.name'            | sed 's/"//g')
+      READY=$(echo $nodes   | jq --arg N $NAME '.items[]            | select(.metadata.name==$N) | .status.conditions[] | select(.type=="Ready") | .status')
+      HRTBT=$(echo $nodes   | jq --arg N $NAME '.items[]            | select(.metadata.name==$N) | .status.conditions[] | select(.type=="Ready") | .lastHeartbeatTime')
+      RBOOT=$(echo $results | jq --arg I $i    '.items[$I|tonumber] | .spec.rebooted|tonumber')
+      KUBLT=$(echo $nodes   | jq --arg N $NAME '.items[]            | select(.metadata.name==$N) | .status.nodeInfo.kubeletVersion')
+      CLCFG=$(echo $results | jq --arg I $i    '.items[$I|tonumber] | .spec.cloudConfig')
+
+      # Strip quotation marks from status string
+      READY="${READY%\"}"
+      READY="${READY#\"}"
+
+      # Strip quotation marks from heartbeat string
+      HRTBT="${HRTBT%\"}"
+      HRTBT="${HRTBT#\"}"
+
+      # Strip quotation marks from Kubelet version string
+      KUBLT="${KUBLT%\"}"
+      KUBLT="${KUBLT#\"}"
+
+      # Strip quotation marks from Cloud Config version string
+      CLCFG="${CLCFG%\"}"
+      CLCFG="${CLCFG#\"}"
+
+      if [ "$READY" = "Unknown" ]; then READY="False"; fi
+
+      printf "| %-25s | %-30s | %-7s | %-30s | %-30s | %-17s | %-13s\n" \
+        "`echo $results | jq --arg I $i '.items[$I|tonumber] | .metadata.name' | sed 's/"//g'`" "`$DATECMD -d @$DATE`" "$READY" "`$DATECMD -d $HRTBT`" "`$DATECMD -d @$RBOOT`" "$KUBLT" "$CLCFG"
+    done
+  }
+
+  info() {
+    echo ""
+      if [ "$all" = true ]; then
+        echo "These are the status reports for all namespaces:"
+        echo ""
+        get current-status --all-namespaces -o yaml
+      else
+        echo "These are the status reports for namespace "$KUBECTL_NAMESPACE": " 
+        echo ""
+        get current-status -o yaml
+      fi
+
+    table
+  }
+
+  synopsis=false
+  all=false
+
+  # Without this, 'getopts' fails below.
+  # https://stackoverflow.com/a/16655341/451664
+  local OPTIND
+
+  usage="
+  usage: status [-h] [-s]
+
+  This script will report on the status from a particular namespace, or
+  all namespaces if the current namespace is 'default' or 'test'.
+
+  where:
+    -h   show this help text
+    -s   use this switch to only show the table"
+
+  # loop through positional options/arguments
+  while getopts ':hs' option; do
+    case "${option}" in
+      h)  echo "$usage"; echo; return ;;
+      s)  synopsis=true               ;;
+      \?) echo -e "illegal option: -${OPTARG}\n" >&2
+          echo "${usage}" >&2
+          echo
+          return ;;
+    esac
+  done
+
+  if [ "$KUBECTL_NAMESPACE" = "default" ] || [ "$KUBECTL_NAMESPACE" = "test" ]; then
+    all=true
+  fi
+
+  if [ "$synopsis" = true ]; then
+    table
+  else
+    info
+  fi
+
+  echo ""
+}

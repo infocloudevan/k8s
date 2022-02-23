@@ -1,0 +1,16 @@
+apiVersion: certmanager.k8s.io/v1alpha1
+kind: Certificate
+metadata:
+  name: calamari
+  namespace: demo-saas
+spec:
+  acme:
+    config:
+    - dns01:
+        provider: route53-darkcubed-net
+      domains:
+      - calamari.a.darkcubed.net
+  commonName: calamari.a.darkcubed.net
+  issuerRef:
+    name: dns-issuer
+  secretName: calamari-syslog-tls

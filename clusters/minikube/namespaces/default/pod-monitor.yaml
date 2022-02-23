@@ -1,0 +1,21 @@
+apiVersion: v1
+items:
+- apiVersion: monitoring.coreos.com/v1
+  kind: PodMonitor
+  metadata:
+    generation: 1
+    labels:
+      prom: monitor
+    name: pod-monitor
+    namespace: default
+    selfLink: /apis/monitoring.coreos.com/v1/namespaces/kafka-saas/podmonitors/pod-monitor
+  spec:
+    podMetricsEndpoints:
+    - port: metrics
+    selector:
+      matchLabels:
+        prom: monitor
+kind: List
+metadata:
+  resourceVersion: ""
+  selfLink: ""

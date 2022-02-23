@@ -1,0 +1,29 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: d3oc-job-scheduler
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: d3oc-job-scheduler
+    spec:
+      containers:
+      - env:
+        - name: PRODDB
+          value: psql://d3postgresql:oon6ooc4OoviTohp@test-d3oc.cmfxlqcsk74c.us-east-2.rds.amazonaws.com:5432/d3main
+        - name: BEANSTALKD_SERVER
+          value: beanstalk:11300
+        - name: ELASTIC_CLUSTER
+          value: https://vpc-test-ni7wpdzcurazpqi5brqrj5aefi.us-east-2.es.amazonaws.com
+        - name: ELASTIC_INDEX
+          value: d3oc-test
+        image: 078306444420.dkr.ecr.us-east-2.amazonaws.com/darkcubed/d3oc-job-scheduler:v1.2.0
+        imagePullPolicy: IfNotPresent
+        name: scheduler
+        resources:
+          requests:
+            cpu: 20m
+            memory: 32Mi
+        terminationMessagePolicy: FallbackToLogsOnError

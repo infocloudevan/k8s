@@ -1,0 +1,25 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: http-dest-{{APPLIANCE}}
+  namespace: {{NAMESPACE}}
+spec:
+  template:
+    metadata:
+      name: http-dest-{{APPLIANCE}}
+    spec:
+      nodeSelector:
+        appliance: {{APPLIANCE}}
+      hostNetwork: true
+      containers:
+        - name: http-dest-{{APPLIANCE}}
+          image: busybox
+          args: ["wget", "-O", "/tmp/home/core/postgres-backup.tar.gz", "http://{{IP}}/postgres-backup.tar.gz"]
+          volumeMounts:
+            - name: home-tmp
+              mountPath: /tmp/home/core
+      restartPolicy: Never
+      volumes:
+        - name: home-tmp
+          hostPath:
+            path: /home/core

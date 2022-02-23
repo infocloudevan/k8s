@@ -1,0 +1,107 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: elk-es
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 100Gi
+  storageClassName: gp2
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: es-kibana
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: es-kibana
+    spec:
+      containers:
+      - name: elasticsearch
+        image: elasticsearch
+        ports:
+        - containerPort: 9200
+        volumeMounts:
+        - mountPath: /usr/share/elasticsearch/data
+          name: elk-es
+      - name: kibana
+        image: kibana
+        ports:
+        - containerPort: 5601
+        env:
+          - name: ELASTICSEARCH_URL
+            value: "http://localhost:9200"
+          - name: SERVER_NAME
+            value: "elk.darkcubed.calops:5601/kibana/"
+      volumes:
+      - name: elk-es
+        persistentVolumeClaim:
+          claimName: elk-es
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: es-kibana
+spec:
+  ports:
+  - name: es
+    port: 9200
+    protocol: TCP
+  - name: kibana
+    port: 5601
+    protocol: TCP
+  selector:
+    app: es-kibana
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  annotations:
+    ingress.kubernetes.io/auth-type: basic
+    ingress.kubernetes.io/auth-secret: basic-auth
+    ingress.kubernetes.io/auth-realm: 'Authentication Required - Kibana'
+    kubernetes.io/ingress.class: nginx
+    kubernetes.io/tls-acme: "true"
+  name: kibana
+spec:
+  rules:
+  - host: jumbotron.a.darkcubed.net
+    http:
+      paths:
+      - backend:
+          serviceName: es-kibana
+          servicePort: 5601
+  tls:
+  - hosts:
+    - jumbotron.a.darkcubed.net
+    secretName: kibana-ingress-tls
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: basic-auth
+data:
+  # vince / rei5iel7Xaiy
+  auth: dmluY2U6JGFwcjEkMFhsVW9XbTgkdC4zSThNZUhBV2JPT2paSGppQVMyMAo=
+type: Opaque
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  annotations:
+    ingress.kubernetes.io/client-body-buffer-size: 1024k
+    kubernetes.io/ingress.class: nginx-internal
+  name: es
+spec:
+  rules:
+  - host: es.darkcubed.calops
+    http:
+      paths:
+      - backend:
+          serviceName: es-kibana
+          servicePort: 9200

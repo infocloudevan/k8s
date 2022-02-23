@@ -1,0 +1,38 @@
+apiVersion: v1
+kind: Service
+metadata:
+  creationTimestamp: "2019-08-20T04:31:41Z"
+  name: kafka-1-internal
+  namespace: kafka-saas
+  resourceVersion: "6101663"
+  selfLink: /api/v1/namespaces/kafka-saas/services/kafka-1-internal
+  uid: 68249422-c303-11e9-845f-0a9658482414
+spec:
+  clusterIP: 100.69.171.181
+  ports:
+  - name: internal
+    port: 9071
+    protocol: TCP
+    targetPort: 9071
+  - name: replication
+    port: 9072
+    protocol: TCP
+    targetPort: 9072
+  - name: external
+    port: 9092
+    protocol: TCP
+    targetPort: 9092
+  - name: jmx
+    port: 7203
+    protocol: TCP
+    targetPort: 7203
+  - name: jolokia
+    port: 7777
+    protocol: TCP
+    targetPort: 7777
+  selector:
+    statefulset.kubernetes.io/pod-name: kafka-1
+  sessionAffinity: None
+  type: ClusterIP
+status:
+  loadBalancer: {}

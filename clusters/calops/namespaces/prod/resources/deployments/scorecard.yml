@@ -1,0 +1,68 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: scorecard
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: scorecard
+  template:
+    metadata:
+      labels:
+        app: scorecard
+    spec:
+      containers:
+      - args:
+        - /hyperdark
+        - --log.verbosity=10
+        - d3oc
+        - scorecard
+        - --app.listen-endpoint=0.0.0.0:8080
+        - --app.pathfinder-endpoint=pathfinder.prod:8080
+        - --app.beanstalk-endpoint=queue.prod:11300
+        - --keystore.provider=memcached
+        - --keystore.endpoint=d3oc.jqj9j7.0001.use2.cache.amazonaws.com:11211
+        - --keystore.endpoint=d3oc.jqj9j7.0002.use2.cache.amazonaws.com:11211
+        - --keystore.endpoint=d3oc.jqj9j7.0003.use2.cache.amazonaws.com:11211
+        - --keystore.conn-timeout=5s
+        - --keystore.max-idle-conns=50
+        env:
+        - name: SCORECARD_AUTH_TOKEN_SECRET
+          valueFrom:
+            secretKeyRef:
+              key: jwt-secret-key
+              name: scorecard-auth
+        image: 078306444420.dkr.ecr.us-east-2.amazonaws.com/darkcubed/hyperdark:{TAG}
+        imagePullPolicy: Always
+        name: scorecard
+        ports:
+        - containerPort: 8080
+          name: grpc
+          protocol: TCP
+        - containerPort: 9102
+          name: metrics
+          protocol: TCP
+        resources:
+          requests:
+            cpu: 500m
+            memory: 32Mi
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: FallbackToLogsOnError
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    prom: monitor
+  name: scorecard
+spec:
+  ports:
+  - name: grpc
+    port: 8080
+    protocol: TCP
+  - name: metrics
+    port: 9102
+    protocol: TCP
+  selector:
+    app: scorecard

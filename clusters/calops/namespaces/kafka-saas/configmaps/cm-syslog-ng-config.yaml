@@ -1,0 +1,20 @@
+apiVersion: v1
+data:
+  syslog-ng.conf: |
+    @version: 3.18
+
+    options{
+      use-dns(no);
+      dns-cache(no);
+      keep-hostname(yes);
+    };
+
+    @include "/etc/syslog-ng/syslog-ng.conf.d/*.conf"
+kind: ConfigMap
+metadata:
+  creationTimestamp: 2020-01-09T16:46:34Z
+  name: syslog-ng-config
+  namespace: kafka-saas
+  resourceVersion: "102524024"
+  selfLink: /api/v1/namespaces/kafka-saas/configmaps/syslog-ng-config
+  uid: 98875be4-32ff-11ea-b7e4-02c6bb02f104

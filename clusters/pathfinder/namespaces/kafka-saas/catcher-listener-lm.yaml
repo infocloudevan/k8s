@@ -1,0 +1,105 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  annotations:
+    deployment.kubernetes.io/revision: "13"
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"extensions/v1beta1","kind":"Deployment","metadata":{"annotations":{},"labels":{"app":"catcher-listener-lm"},"name":"catcher-listener-lm","namespace":"kafka-saas"},"spec":{"progressDeadlineSeconds":2147483647,"replicas":1,"revisionHistoryLimit":10,"selector":{"matchLabels":{"app":"catcher-listener-lm"}},"strategy":{"rollingUpdate":{"maxSurge":1,"maxUnavailable":1},"type":"RollingUpdate"},"template":{"metadata":{"annotations":{"date":"1598987248"},"creationTimestamp":null,"labels":{"app":"catcher-listener-lm"}},"spec":{"affinity":{"podAntiAffinity":{"requiredDuringSchedulingIgnoredDuringExecution":[{"labelSelector":{"matchExpressions":[{"key":"app","operator":"In","values":["catcher-listener-lm"]}]},"topologyKey":"kubernetes.io/hostname"}]}},"containers":[{"args":["/hyperdark","--log.verbosity=9","catcher","listen","--checkpoint.config-file=/etc/config/checkpoint.yml","--kafka.output-topic=IncomingSyslogStream-LM","--kafka.async-send"],"env":[{"name":"HYPERDARK_KAFKA_ENDPOINTS","valueFrom":{"configMapKeyRef":{"key":"kafka-cluster-external","name":"endpoints"}}}],"image":"944254975049.dkr.ecr.us-gov-west-1.amazonaws.com/darkcubed-gov/hyperdark:f2d65ca","imagePullPolicy":"Always","name":"catcher","resources":{},"terminationMessagePath":"/dev/termination-log","terminationMessagePolicy":"FallbackToLogsOnError","volumeMounts":[{"mountPath":"/var/certs","name":"certs"},{"mountPath":"/etc/config","name":"configs"}]}],"dnsPolicy":"ClusterFirst","hostNetwork":true,"nodeSelector":{"kops.k8s.io/instancegroup":"syslog2"},"restartPolicy":"Always","schedulerName":"default-scheduler","securityContext":{},"terminationGracePeriodSeconds":30,"tolerations":[{"effect":"NoSchedule","key":"dedicated","value":"udp-syslog2"}],"volumes":[{"name":"certs","secret":{"defaultMode":420,"secretName":"syslog-tls"}},{"configMap":{"defaultMode":420,"name":"checkpoint-config"},"name":"configs"}]}}}}
+  creationTimestamp: "2020-07-17T18:25:52Z"
+  generation: 23
+  labels:
+    app: catcher-listener-lm
+  name: catcher-listener-lm
+  namespace: kafka-saas
+  resourceVersion: "131840928"
+  selfLink: /apis/extensions/v1beta1/namespaces/kafka-saas/deployments/catcher-listener-lm
+  uid: f1f683db-c85a-11ea-845f-0a9658482414
+spec:
+  progressDeadlineSeconds: 2147483647
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: catcher-listener-lm
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+    type: RollingUpdate
+  template:
+    metadata:
+      annotations:
+        date: "1598987248"
+      creationTimestamp: null
+      labels:
+        app: catcher-listener-lm
+    spec:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: app
+                operator: In
+                values:
+                - catcher-listener-lm
+            topologyKey: kubernetes.io/hostname
+      containers:
+      - args:
+        - /hyperdark
+        - --log.verbosity=9
+        - catcher
+        - listen
+        - --checkpoint.config-file=/etc/config/checkpoint.yml
+        - --kafka.async-send
+        env:
+        - name: HYPERDARK_KAFKA_ENDPOINTS
+          valueFrom:
+            configMapKeyRef:
+              key: kafka-cluster-external
+              name: endpoints
+        image: 944254975049.dkr.ecr.us-gov-west-1.amazonaws.com/darkcubed-gov/hyperdark:f2d65ca
+        imagePullPolicy: Always
+        name: catcher
+        resources: {}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: FallbackToLogsOnError
+        volumeMounts:
+        - mountPath: /var/certs
+          name: certs
+        - mountPath: /etc/config
+          name: configs
+      dnsPolicy: ClusterFirst
+      hostNetwork: true
+      nodeSelector:
+        kops.k8s.io/instancegroup: syslog2
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
+      tolerations:
+      - effect: NoSchedule
+        key: dedicated
+        value: udp-syslog2
+      volumes:
+      - name: certs
+        secret:
+          defaultMode: 420
+          secretName: syslog-tls
+      - configMap:
+          defaultMode: 420
+          name: checkpoint-config
+        name: configs
+status:
+  availableReplicas: 1
+  conditions:
+  - lastTransitionTime: "2020-07-17T18:25:52Z"
+    lastUpdateTime: "2020-07-17T18:25:52Z"
+    message: Deployment has minimum availability.
+    reason: MinimumReplicasAvailable
+    status: "True"
+    type: Available
+  observedGeneration: 23
+  readyReplicas: 1
+  replicas: 1
+  updatedReplicas: 1

@@ -1,0 +1,12 @@
+# Add term to be replaced by term separated by a tab.
+# Example: v1.0<tab>v2.0
+
+# statsite and lineup
+https://test.deception.darkcubed.io/grpc	https://test.deception.aws.darkcubed.net
+
+# statsite
+statsite:v23.0	statsite:v23.0_go1.9
+
+# lineup
+# remove -blackbox-timeout
+hyperdark:v23.0	hyperdark:v23.0_go1.9

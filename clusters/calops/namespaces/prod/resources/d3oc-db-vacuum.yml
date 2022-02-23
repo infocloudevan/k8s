@@ -1,0 +1,23 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: d3oc-db-vacuum
+spec:
+  concurrencyPolicy: Forbid
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - args:
+            - /bin/sh
+            - -c
+            - echo "d3oc.cmfxlqcsk74c.us-east-2.rds.amazonaws.com:5432:d3main:d3postgresql:pSE8BH1IRIbiso41LX" > .pgpass && chmod 600 .pgpass && vacuumdb -h d3oc.cmfxlqcsk74c.us-east-2.rds.amazonaws.com -U d3postgresql -W --analyze -j 10 d3main
+            image: activeshadow/aws-cli
+            imagePullPolicy: IfNotPresent
+            name: d3oc-db-vacuum
+            terminationMessagePolicy: FallbackToLogsOnError
+          restartPolicy: OnFailure
+  schedule: 0 9 * * *
+  successfulJobsHistoryLimit: 1

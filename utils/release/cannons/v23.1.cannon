@@ -1,0 +1,20 @@
+# Add term to be replaced by term separated by a tab.
+# Example: v1.0<tab>v2.0
+
+# Image tags
+v23.0	v23.1
+v23.1_go1.9	v23.1
+v23.1_l5d-api-http.0	v23.1
+v23.1_beats-filter.0	v23.1
+ST-38	v23.1
+ST-97	v23.1
+
+# Statsite URL
+http://10.51.245.247:8080	https://prod.deception.aws.darkcubed.net
+
+# Blackbox URL
+prod.deception.darkcubed.io/grpc	prod.deception.aws.darkcubed.net
+test.deception.darkcubed.io/grpc	test.deception.aws.darkcubed.net
+
+# Special worker entries
+--syslog-endpoints	--syslog-endpoint

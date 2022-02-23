@@ -1,0 +1,46 @@
+# Prerequisites for the below cron job to work:
+#
+# Create the s3-access-key secret that is referenced as a volume in the
+# cron job spec. First, create the `credentials` file with the following
+# data (replacing the question marks w/ the actual key and ID):
+#
+# [default]
+# aws_secret_access_key = ???
+# aws_access_key_id = ???
+#
+# Next, use `kubectl` to create a secret from the file:
+#
+# kubectl --context calops --namespace prod create secret generic s3-access-key --from-file ./credentials
+#
+# Now that the secret is created, you should be able to create the cron
+# job in the `test/d3oc` namespace.
+
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: timescale-backup
+spec:
+  concurrencyPolicy: Forbid
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - args:
+            - /bin/sh
+            - -c
+            - "pg_dump -Fc -U dark3 -h timescale -v dark3 -f timescale.sql.gz && aws s3 cp timescale.sql.gz s3://darkcubed-backups/calops/timescale.sql.gz"
+            image: activeshadow/aws-cli:pg-9.6
+            imagePullPolicy: Always
+            name: backup
+            volumeMounts:
+            - name: key
+              mountPath: /root/.aws
+          restartPolicy: Never
+          volumes:
+          - name: key
+            secret:
+              secretName: s3-access-key
+  schedule: 0 * * * *
+  successfulJobsHistoryLimit: 1

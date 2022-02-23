@@ -1,0 +1,37 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: logstash-pipeline
+data:
+  logstash.conf: |
+    input {
+      tcp {
+        port => 12345
+      }
+    }
+
+    output {
+      stdout { codec => json_lines }
+    }
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: logstash
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: logstash
+    spec:
+      containers:
+      - image: docker.elastic.co/logstash/logstash-oss:6.6.2
+        name: logstash
+        volumeMounts:
+        - mountPath: /usr/share/logstash/pipeline
+          name: logstash-pipeline
+      volumes:
+      - name: logstash-pipeline
+        configMap:
+          name: logstash-pipeline

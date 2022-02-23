@@ -1,0 +1,32 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: scan
+spec:
+  template:
+    metadata:
+      name: scan
+    spec:
+      nodeSelector:
+        appliance: squirrel
+      hostNetwork: true
+      imagePullSecrets:
+      - name: quay.io
+      containers:
+      - args:
+        - scanner
+        - /openvas/results
+        - 10.10.11.0/24
+        name: scanner
+        image: quay.io/darkcubed/openvas-full:1.0
+        imagePullPolicy: Always
+        terminationMessagePolicy: FallbackToLogsOnError
+        volumeMounts:
+        - name: results
+          mountPath: /openvas/results
+      restartPolicy: Never
+      volumes:
+      - hostPath:
+          path: /opt/darkcubed/openvas/results
+          type: DirectoryOrCreate
+        name: results

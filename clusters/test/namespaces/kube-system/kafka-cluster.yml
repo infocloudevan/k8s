@@ -1,0 +1,96 @@
+apiVersion: kafka.strimzi.io/v1beta1
+kind: Kafka
+metadata:
+  name: kafka
+spec:
+  kafka:
+    replicas: 3
+    version: 2.2.1
+    resources:
+      requests:
+        memory: 4Gi
+        cpu: 2
+    jvmOptions:
+      -Xms: 3072m
+      -Xmx: 3072m
+    storage:
+      type: persistent-claim
+      size: 100Gi
+    listeners:
+      plain: {}
+#     external:
+#       type: loadbalancer
+#       tls: false
+#       type: ingress
+#       configuration:
+#         bootstrap:
+#           host: bootstrap.kafka.darkcubed-gov.saas-gov
+#         brokers:
+#         - broker: 0
+#           host: b0.kafka.darkcubed-gov.saas-gov
+#         - broker: 1
+#           host: b1.kafka.darkcubed-gov.saas-gov
+#         - broker: 2
+#           host: b2.kafka.darkcubed-gov.saas-gov
+    template:
+      pod:
+        priorityClassName: system-node-critical
+        tolerations:
+        - key: dedicated
+          operator: Equal
+          value: kafka
+          effect: NoSchedule
+        affinity:
+          nodeAffinity:
+            requiredDuringSchedulingIgnoredDuringExecution:
+              nodeSelectorTerms:
+              - matchExpressions:
+                - key: agentpool
+                  operator: In
+                  values:
+                  - kafka
+          podAntiAffinity:
+            requiredDuringSchedulingIgnoredDuringExecution:
+            - topologyKey: kubernetes.io/hostname
+#     externalBootstrapService:
+#       metadata:
+#         annotations:
+#           service.beta.kubernetes.io/aws-load-balancer-internal: 0.0.0.0/0
+#     perPodService:
+#       metadata:
+#         annotations:
+#           service.beta.kubernetes.io/aws-load-balancer-internal: 0.0.0.0/0
+  zookeeper:
+    replicas: 3
+    resources:
+      requests:
+        memory: 1Gi
+        cpu: 1
+    jvmOptions:
+      -Xms: 768m
+      -Xmx: 768m
+    storage:
+      type: persistent-claim
+      size: 10Gi
+    template:
+      pod:
+        priorityClassName: system-node-critical
+        tolerations:
+        - key: dedicated
+          operator: Equal
+          value: kafka
+          effect: NoSchedule
+        affinity:
+          nodeAffinity:
+            requiredDuringSchedulingIgnoredDuringExecution:
+              nodeSelectorTerms:
+              - matchExpressions:
+                - key: agentpool
+                  operator: In
+                  values:
+                  - kafka
+          podAntiAffinity:
+            requiredDuringSchedulingIgnoredDuringExecution:
+            - topologyKey: kubernetes.io/hostname
+  entityOperator:
+    topicOperator: {}

@@ -1,0 +1,106 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  annotations:
+    deployment.kubernetes.io/revision: "7389"
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"extensions/v1beta1","kind":"Deployment","metadata":{"annotations":{},"labels":{"app":"scoreboard"},"name":"scoreboard","namespace":"kafka-saas"},"spec":{"progressDeadlineSeconds":2147483647,"replicas":3,"revisionHistoryLimit":10,"selector":{"matchLabels":{"app":"scoreboard"}},"strategy":{"rollingUpdate":{"maxSurge":1,"maxUnavailable":1},"type":"RollingUpdate"},"template":{"metadata":{"annotations":{"date":"1597456816"},"creationTimestamp":null,"labels":{"app":"scoreboard","prom":"monitor"}},"spec":{"containers":[{"args":["/hyperdark","--log.verbosity=10","--app.jwt-signing-key=OoChopheep6ahPefiev9zeitho4le5ku","scoreboard","--app.root-url=https://app.darkcubed.com"],"env":[{"name":"HYPERDARK_KAFKA_ENDPOINTS","valueFrom":{"configMapKeyRef":{"key":"kafka-cluster","name":"endpoints"}}},{"name":"HYPERDARK_CACHE_ENDPOINT","valueFrom":{"configMapKeyRef":{"key":"redis-server","name":"endpoints"}}},{"name":"HYPERDARK_CACHE_CLUSTER_ENDPOINTS","valueFrom":{"configMapKeyRef":{"key":"redis-cluster","name":"endpoints"}}},{"name":"HYPERDARK_DB_ENDPOINT","valueFrom":{"secretKeyRef":{"key":"postgres-cluster","name":"endpoints"}}},{"name":"HYPERDARK_ES_ENDPOINTS","valueFrom":{"configMapKeyRef":{"key":"es-cluster","name":"endpoints"}}},{"name":"HYPERDARK_ES_CREDENTIALS","valueFrom":{"secretKeyRef":{"key":"creds","name":"elastic-user"}}}],"image":"078306444420.dkr.ecr.us-east-2.amazonaws.com/darkcubed/hyperdark:125fbaf","imagePullPolicy":"Always","name":"scoreboard","ports":[{"containerPort":9102,"name":"metrics","protocol":"TCP"}],"resources":{"requests":{"cpu":"250m","memory":"128Mi"}},"terminationMessagePath":"/dev/termination-log","terminationMessagePolicy":"FallbackToLogsOnError"}],"dnsPolicy":"ClusterFirst","restartPolicy":"Always","schedulerName":"default-scheduler","securityContext":{},"terminationGracePeriodSeconds":30}}}}
+  creationTimestamp: 2019-08-17T15:58:39Z
+  generation: 7423
+  labels:
+    app: scoreboard
+  name: scoreboard
+  namespace: kafka-saas
+  resourceVersion: "234243266"
+  selfLink: /apis/extensions/v1beta1/namespaces/kafka-saas/deployments/scoreboard
+  uid: e1422f90-c107-11e9-984d-02b425e82e0e
+spec:
+  progressDeadlineSeconds: 2147483647
+  replicas: 3
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: scoreboard
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+    type: RollingUpdate
+  template:
+    metadata:
+      annotations:
+        date: "1600480811"
+      creationTimestamp: null
+      labels:
+        app: scoreboard
+        prom: monitor
+    spec:
+      containers:
+      - args:
+        - /hyperdark
+        - --log.verbosity=10
+        - --app.jwt-signing-key=OoChopheep6ahPefiev9zeitho4le5ku
+        - scoreboard
+        - --app.root-url=https://app.darkcubed.com
+        env:
+        - name: HYPERDARK_KAFKA_ENDPOINTS
+          valueFrom:
+            configMapKeyRef:
+              key: kafka-cluster
+              name: endpoints
+        - name: HYPERDARK_CACHE_ENDPOINT
+          valueFrom:
+            configMapKeyRef:
+              key: redis-server
+              name: endpoints
+        - name: HYPERDARK_CACHE_CLUSTER_ENDPOINTS
+          valueFrom:
+            configMapKeyRef:
+              key: redis-cluster
+              name: endpoints
+        - name: HYPERDARK_DB_ENDPOINT
+          valueFrom:
+            secretKeyRef:
+              key: postgres-cluster
+              name: endpoints
+        - name: HYPERDARK_ES_ENDPOINTS
+          valueFrom:
+            configMapKeyRef:
+              key: es-cluster
+              name: endpoints
+        - name: HYPERDARK_ES_CREDENTIALS
+          valueFrom:
+            secretKeyRef:
+              key: creds
+              name: elastic-user
+        image: 078306444420.dkr.ecr.us-east-2.amazonaws.com/darkcubed/hyperdark:f2d65ca
+        imagePullPolicy: Always
+        name: scoreboard
+        ports:
+        - containerPort: 9102
+          name: metrics
+          protocol: TCP
+        resources:
+          requests:
+            cpu: 250m
+            memory: 128Mi
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: FallbackToLogsOnError
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
+status:
+  availableReplicas: 3
+  conditions:
+  - lastTransitionTime: 2020-08-21T00:47:06Z
+    lastUpdateTime: 2020-08-21T00:47:06Z
+    message: Deployment has minimum availability.
+    reason: MinimumReplicasAvailable
+    status: "True"
+    type: Available
+  observedGeneration: 7423
+  readyReplicas: 3
+  replicas: 3
+  updatedReplicas: 3

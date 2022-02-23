@@ -1,0 +1,36 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: saas-db-analyze
+  namespace: demo-saas
+spec:
+  concurrencyPolicy: Forbid
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    metadata:
+    spec:
+      template:
+        metadata:
+        spec:
+          containers:
+          - args:
+            - /bin/sh
+            - -c
+            - psql $(DB_URL)
+              -c "ANALYZE"
+            env:
+            - name: DB_URL
+              valueFrom: 
+                secretKeyRef:
+                  name: saas-db-credentials
+                  key: fullurl
+            image: activeshadow/psql-cli
+            imagePullPolicy: IfNotPresent
+            name: saas-db-analyze
+            resources: {}
+            terminationMessagePath: /dev/termination-log
+            terminationMessagePolicy: FallbackToLogsOnError
+          restartPolicy: OnFailure
+  schedule: 0,15,30,45 11-23 * * *
+  successfulJobsHistoryLimit: 0
+  suspend: false

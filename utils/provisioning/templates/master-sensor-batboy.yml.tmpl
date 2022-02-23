@@ -1,0 +1,90 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: {{APPLIANCE}}-sensor
+  namespace: {{NAMESPACE}}
+spec:
+  replicas: 0
+  template:
+    metadata:
+      labels:
+        app: {{APPLIANCE}}-sensor
+    spec:
+      nodeSelector:
+        appliance: {{APPLIANCE}}
+      imagePullSecrets:
+        - name: quay.io
+      hostNetwork: true
+      containers:
+        - name: bro
+          image: quay.io/darkcubed/bro:v24.0
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: IFACE
+              value: {{IFACE}}
+          volumeMounts:
+            - name: bro-spool
+              mountPath: /opt/bro/spool/bro
+          resources:
+            requests:
+              memory: "2G"
+            limits:
+              memory: "4G"
+        - name: batboy
+          image: quay.io/darkcubed/hyperdark:v24.0
+          imagePullPolicy: IfNotPresent
+          args:
+            - batboy
+            - --mode=client
+            - --protocol=http
+            - --endpoint=https://{{URL}}
+            - --base-log-path=/opt/logs
+            - --conn-log-name=D3_conn.log
+            - --dns-log-name=D3_dns.log
+            - --syslog-log-name=D3_syslog.log
+          volumeMounts:
+            - name: bro-spool
+              mountPath: /opt/logs
+        - name: groundskeeper
+          image: quay.io/darkcubed/hyperdark:v24.0
+          imagePullPolicy: IfNotPresent
+          args:
+            - --log-level=debug
+            - groundskeeper
+            - --sleep=10s
+            - --sensor-deployment=true
+            - --tube=query
+            - --tube=write
+          env:
+            - name: HOST_PROC
+              value: /rootfs/proc
+          volumeMounts:
+            - name: host-root
+              mountPath: /rootfs
+              readOnly: true
+        - name: statsite
+          image: quay.io/darkcubed/statsite:v24.0
+          imagePullPolicy: IfNotPresent
+          args:
+            - statsite
+            - -f
+            - /etc/statsite.blackbox.conf
+          ports:
+            - containerPort: 8125
+              hostPort: 8125
+              protocol: UDP
+          env:
+            - name: BLACKBOX_TIMEOUT
+              value: 5s
+            - name: CUSTOMER_ID
+              value: {{APPLIANCE}}
+            - name: K8S_NAMESPACE
+              value: default
+            - name: BLACKBOX_ENDPOINT
+              value: https://prod.deception.a.darkcubed.net
+      volumes:
+        - name: bro-spool
+          emptyDir: {}
+        - name: host-root
+          hostPath:
+            path: /

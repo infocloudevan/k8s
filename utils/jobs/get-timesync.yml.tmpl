@@ -1,0 +1,27 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: get-timesync-{{APPLIANCE}}
+  namespace: {{NAMESPACE}}
+spec:
+  template:
+    metadata:
+      name: get-timesync-{{APPLIANCE}}
+    spec:
+      nodeSelector:
+        appliance: {{APPLIANCE}}
+      containers:
+        - name: get-timesync
+          image: busybox
+          command: ["cat", "/tmp/home/core/timesync.output"]
+          env:
+            - name: REPORTER
+              value: stream
+          volumeMounts:
+            - name: get-timesync
+              mountPath: /tmp/home/core
+      restartPolicy: Never
+      volumes:
+        - name: get-timesync
+          hostPath:
+            path: /home/core 

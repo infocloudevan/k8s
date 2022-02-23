@@ -1,0 +1,13 @@
+Deployment,Image,Build,Kafka,Database,Elastic,Redis,Service,Ingress
+api,hyperdark,9eedfd1,N,N,N,N,api,api
+d3oc-workers-geo,lookup_geo,latest,N,N,N,N,N/A,N/A
+d3oc-workers-whois,lookup_whois,cff2438,N,N,N,N,N/A,N/A
+pathfinder,hyperdark,1074e97,N,N,N,N,pathfinder,N/A
+prod-metrics-influxdb,influxdb,1.4-alpine,N,N,N,N,prod-metrics-influxdb,N/A
+queue,beanstalkd,N/A,N,N,N,N,queue,N/A
+scorecard,hyperdark,a168faa,N,N,N,N,scorecard,N/A
+scorekeeper,hyperdark,v25.4,N,N,N,N,scorekeeper,N/A
+statistician,statistician,3651df7,N,N,N,N,N/A,N/A
+statistician-dns,statistician,3651df7,N,N,N,N,N/A,N/A
+statsite,statsite,v25.4,N,N,N,N,statsite,N/A
+ticket-booth,hyperdark,v25.4,N,N,N,N,ticket-booth,N/A
